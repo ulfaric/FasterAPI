@@ -8,8 +8,17 @@ from sqlalchemy.orm import Session
 
 from .schemas import UserAdmin
 
-from . import (ALGORITHM, SECRET_KEY, TOKEN_EXPIRATION_TIME, AuthSession, Base,
-               Engine, get_db, oauth2_scheme, pwd_context)
+from . import (
+    ALGORITHM,
+    SECRET_KEY,
+    TOKEN_EXPIRATION_TIME,
+    AuthSession,
+    Base,
+    Engine,
+    get_db,
+    oauth2_scheme,
+    pwd_context,
+)
 from .models import BlacklistedToken, User
 
 
@@ -25,8 +34,11 @@ async def cleanup_expired_tokens():
 
 
 async def auth_startup():
-    Base.metadata.create_all(bind=Engine)
     asyncio.create_task(cleanup_expired_tokens())
+
+
+def init_migration():
+    Base.metadata.create_all(bind=Engine)
 
 
 def verify_password(plain_password, hashed_password):
@@ -49,14 +61,19 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def blacklist_token(token:str, db: Annotated[Session, Depends(get_db)]):
+
+def blacklist_token(token: str, db: Annotated[Session, Depends(get_db)]):
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     exp = datetime.fromtimestamp(payload["exp"])
     token_to_blacklist = BlacklistedToken(token=token, exp=exp)
     db.add(token_to_blacklist)
     db.commit()
 
-async def authenticated(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Session, Depends(get_db)]):
+
+async def authenticated(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Annotated[Session, Depends(get_db)],
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -67,7 +84,9 @@ async def authenticated(token: Annotated[str, Depends(oauth2_scheme)], db: Annot
         detail="Invalid JWT token",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    blacklisted_token = db.query(BlacklistedToken).filter(BlacklistedToken.token == token).first()
+    blacklisted_token = (
+        db.query(BlacklistedToken).filter(BlacklistedToken.token == token).first()
+    )
     if blacklisted_token:
         raise jwt_exception
     try:
@@ -85,15 +104,17 @@ async def authenticated(token: Annotated[str, Depends(oauth2_scheme)], db: Annot
         raise credentials_exception
     return user
 
+
 async def is_superuser(user: Annotated[User, Depends(authenticated)]):
-    if not user.is_superuser: # type: ignore
+    if not user.is_superuser:  # type: ignore
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="The user doesn't have enough privileges",
         )
     return user
 
-def register_user(user:UserAdmin, db: Annotated[Session, Depends(get_db)]):
+
+def register_user(user: UserAdmin, db: Annotated[Session, Depends(get_db)]):
     extsing_user = db.query(User).filter(User.username == user.username).first()
     if extsing_user:
         raise HTTPException(
@@ -113,7 +134,10 @@ def register_user(user:UserAdmin, db: Annotated[Session, Depends(get_db)]):
     db.refresh(new_user)
     return user
 
-def create_superuser(username: str, password: str, first_name: str, last_name: str, email: str):
+
+def create_superuser(
+    username: str, password: str, first_name: str, last_name: str, email: str
+):
     superuser = UserAdmin(
         username=username,
         first_name=password,
@@ -122,9 +146,11 @@ def create_superuser(username: str, password: str, first_name: str, last_name: s
         password=password,
         is_superuser=True,
     )
-    try:
-        db = AuthSession()
+    db = AuthSession()
+    existing_user = db.query(User).filter(User.username == superuser.username).first()
+    if existing_user:
+        db.close()
+        return
+    else:
         register_user(superuser, db)
-    except Exception as e:
-        pass
-        
+        db.close()

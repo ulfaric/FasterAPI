@@ -11,11 +11,14 @@ import yaml
 
 with open("auth_config.yaml", "r") as f:
     config = yaml.safe_load(f)
-    ALLOW_SELF_REGISTRATION = config["ALLOW_SELF_REGISTRATION"]
+    try:
+        ALLOW_SELF_REGISTRATION = config["ALLOW_SELF_REGISTRATION"]
+    except KeyError:
+        ALLOW_SELF_REGISTRATION = True
 
 auth_router = APIRouter()
 
-@auth_router.post(f"/{TOKEN_URL}/", tags=["Authentication"])
+@auth_router.post(f"/{TOKEN_URL}", tags=["Authentication"])
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ):
@@ -29,7 +32,7 @@ async def login_for_access_token(
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
-@auth_router.post(f"/logout/", tags=["Authentication"], status_code=status.HTTP_200_OK)
+@auth_router.post(f"/logout", tags=["Authentication"], status_code=status.HTTP_200_OK)
 async def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     """Logout a user and blacklisting their JWT access token"""
     try:
@@ -42,14 +45,14 @@ async def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_
     return {"detail": "Successfully logged out"}
 
 if ALLOW_SELF_REGISTRATION:
-    @auth_router.post("/users/create/", tags=["Users"])
+    @auth_router.post("/users/create", tags=["Users"])
     async def register_only_admin(new_user: UserAdmin, db: Session = Depends(get_db)):
         """Register a new user"""
         new_user.is_superuser = False # type: ignore
         register_user(new_user, db)
         return {"detail": "user successfully registered"}
 else:
-    @auth_router.post("/users/create/", tags=["Users"])
+    @auth_router.post("/users/create", tags=["Users"])
     async def register_allow_all(new_user: UserAdmin, db: Session = Depends(get_db), user:User = Depends(is_superuser)):
         """Register a new user"""
         register_user(new_user, db)

@@ -9,9 +9,18 @@ from sqlalchemy.orm import sessionmaker
 with open("auth_config.yaml", "r") as f:
     config = yaml.safe_load(f)
     SECRET_KEY = config["SECRET_KEY"]
-    ALGORITHM = config["ALGORITHM"]
-    TOKEN_URL = config["TOKEN_URL"]
-    TOKEN_EXPIRATION_TIME = config["TOKEN_EXPIRATION_TIME"]
+    try:
+        ALGORITHM = config["ALGORITHM"]
+    except KeyError:
+        ALGORITHM = "HS256"
+    try:
+        TOKEN_URL = config["TOKEN_URL"]
+    except KeyError:
+        TOKEN_URL = "/login"
+    try:
+        TOKEN_EXPIRATION_TIME = config["TOKEN_EXPIRATION_TIME"]
+    except KeyError:
+        TOKEN_EXPIRATION_TIME = 15
     EXPIRED_TOKENS_CLEANER_INTERVAL = TOKEN_EXPIRATION_TIME * 60
     SQLALCHEMY_DATABASE_URL = config["SQLALCHEMY_DATABASE_URL"]
 

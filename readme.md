@@ -28,27 +28,28 @@ ALLOWED_METHODS: # Here goes your allowed method for CSRF protection
 ALLOWED_HEADERS: # Here goes your allowed headers for CSRF protection
   - "*"
 ```
-Now, create a "app.py" file:
+Now, create a "main.py" file:
 ```
-from FasterAPI.utils import create_superuser
-from FasterAPI.app import app
+import uvicorn
+from FasterAPI.utils import init_migration, create_superuser
 
-# create the super user
-create_superuser(
-    username="admin",
-    password="admin",
-    email="email@email.com",
-    first_name="admin",
-    last_name="admin",
-)
+if __name__ == "__main__":
+    # must run at first which creates all tables within the database.
+    init_migration()
+    # create a superuser, optional
+    create_superuser(
+        username="admin",
+        password="admin",
+        first_name="admin",
+        last_name="admin",
+        email="admin@admin.com"
+    )
+    # start the fastapi app
+    uvicorn.run("FasterAPI.app:app", host="127.0.0.1", log_level="info", reload=True)
+```
+Finally, you could start the application by simply run the main.py.
 
-# refrence to the FastAPI app instance
-Myapp = app
-```
-Finally, you could start the application by:
-```
-uvicorn app:Myapp --reload
-```
+## Add additonal models and routes
 If you need more models, you have to reference the base created inside FasterAPI:
 ```
 from FasterAPI import Base
@@ -59,4 +60,14 @@ from FasterAPI.app import app
 
 @app.get("/)
 # your function goes here
+```
+Note that you will have to create a python module, place main.py and auth-config.yaml like following:
+```
+your_module:
+  -- __init__.py
+  -- models.py # your additional models
+  -- schemas.py # your schemas
+  -- routes.py # your addtional routes
+main.py
+auth_config.yaml
 ```
