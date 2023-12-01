@@ -4,7 +4,7 @@ This is a simple start point for backend application based on FastAPI with JWT u
 
 ## How to use
 
-First install it with pip
+First install it with pip. You do not need to install FastAPI seperately. All related libaray has been added as dependencies.
 
 ```[python]
 pip install FasterAPI
