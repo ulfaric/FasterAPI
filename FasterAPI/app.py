@@ -11,14 +11,29 @@ app = FastAPI()
 
 with open("auth_config.yaml", "r") as f:
     config = yaml.safe_load(f)
-    origins = config["ALLOWED_ORIGINS"]
+    try:
+        origins = config["ALLOWED_ORIGINS"]
+    except KeyError:
+        origins = ["*"]
+    try:
+        allow_credentials = config["ALLOW_CREDENTIALS"]
+    except KeyError:
+        allow_credentials = False
+    try:
+        allow_methods = config["ALLOW_METHODS"]
+    except KeyError:
+        allow_methods = ["*"]
+    try:
+        allow_headers = config["ALLOW_HEADERS"]
+    except KeyError:
+        allow_headers = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=allow_credentials,
+    allow_methods=allow_methods,
+    allow_headers=allow_headers,
 )
 
 app.include_router(auth_router)

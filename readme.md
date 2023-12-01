@@ -17,7 +17,15 @@ ALGORITHM: "HS256" # encryption algorithm
 TOKEN_URL: "login" # url for login
 TOKEN_EXPIRATION_TIME: 1 # token expiration time in minutes.
 ALLOW_SELF_REGISTRATION: True # if ture, anyone could register a user account. Otherwise, only superuser could.
+
+# if any following configuration is missing, lowest security config will used for faster development!
+# for non-website (include web app) you may want to use the default settings so your request won't be blocked.
+ALLOW_CREDENTIALS: False # Here goes your choice for whether allow credential for CSRF protection
 ALLOWED_ORIGINS: # Here goes your allowed origns for CSRF protection
+  - "*"
+ALLOWED_METHODS: # Here goes your allowed method for CSRF protection
+  - "*"
+ALLOWED_HEADERS: # Here goes your allowed headers for CSRF protection
   - "*"
 ```
 Now, create a "app.py" file:
