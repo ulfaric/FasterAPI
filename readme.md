@@ -17,6 +17,8 @@ ALGORITHM: "HS256" # encryption algorithm
 TOKEN_URL: "login" # url for login
 TOKEN_EXPIRATION_TIME: 1 # token expiration time in minutes.
 ALLOW_SELF_REGISTRATION: True # if ture, anyone could register a user account. Otherwise, only superuser could.
+ALLOWED_ORIGINS: # Here goes your allowed origns for CSRF protection
+  - "*"
 ```
 Now, create a "app.py" file:
 ```
