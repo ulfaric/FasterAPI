@@ -46,14 +46,14 @@ async def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_
 
 if ALLOW_SELF_REGISTRATION:
     @auth_router.post("/users/create", tags=["Users"])
-    async def register_only_admin(new_user: UserAdmin, db: Session = Depends(get_db)):
+    async def register_user_self_signup(new_user: UserAdmin, db: Session = Depends(get_db)):
         """Register a new user"""
         new_user.is_superuser = False # type: ignore
         register_user(new_user, db)
         return {"detail": "user successfully registered"}
 else:
     @auth_router.post("/users/create", tags=["Users"])
-    async def register_allow_all(new_user: UserAdmin, db: Session = Depends(get_db), user:User = Depends(is_superuser)):
+    async def register_user_only_by_superuser(new_user: UserAdmin, db: Session = Depends(get_db), user:User = Depends(is_superuser)):
         """Register a new user"""
         register_user(new_user, db)
         return {"detail": "user successfully registered"}
