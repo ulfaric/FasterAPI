@@ -1,0 +1,29 @@
+[project]
+name = "FasterAPI"
+version = "0.0.1"
+authors = [
+  { name="Yifei Ren", email="ryf0510@live.com" },
+]
+description = "Just a FasterAPI starting point with JWT user authentication."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+  "fastapi[all]",
+  "sqlalchemy",
+  "python-jose[cryptography]",
+  "passlib[bcrypt]",
+  "psycopg2-binary",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/ulfaric/PyCloudSim"
+"Bug Tracker" = "https://github.com/ulfaric/PyCloudSim/issues"
+
+[tool.setuptools]
+packages = ["PyCloudSim", "PyCloudSim.entity", "PyCloudSim.monitor", "PyCloudSim.scheduler"]

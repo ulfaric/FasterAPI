@@ -1,0 +1,130 @@
+import asyncio
+from datetime import datetime, timedelta
+from typing import Annotated
+
+from fastapi import Depends, HTTPException, status
+from jose import JWTError, jwt
+from sqlalchemy.orm import Session
+
+from .schemas import UserAdmin
+
+from . import (ALGORITHM, SECRET_KEY, TOKEN_EXPIRATION_TIME, AuthSession, Base,
+               Engine, get_db, oauth2_scheme, pwd_context)
+from .models import BlacklistedToken, User
+
+
+async def cleanup_expired_tokens():
+    while True:
+        db = AuthSession()
+        db.query(BlacklistedToken).filter(
+            BlacklistedToken.exp < datetime.now()
+        ).delete()
+        db.commit()
+        db.close()
+        await asyncio.sleep(TOKEN_EXPIRATION_TIME)
+
+
+async def auth_startup():
+    Base.metadata.create_all(bind=Engine)
+    asyncio.create_task(cleanup_expired_tokens())
+
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+async def authenticate_user(db: Session, username: str, password: str):
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=TOKEN_EXPIRATION_TIME)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def blacklist_token(token:str, db: Annotated[Session, Depends(get_db)]):
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    exp = datetime.fromtimestamp(payload["exp"])
+    token_to_blacklist = BlacklistedToken(token=token, exp=exp)
+    db.add(token_to_blacklist)
+    db.commit()
+
+async def authenticated(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Session, Depends(get_db)]):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    jwt_exception = HTTPException(
+        status_code=status.HTTP_406_NOT_ACCEPTABLE,
+        detail="Invalid JWT token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    blacklisted_token = db.query(BlacklistedToken).filter(BlacklistedToken.token == token).first()
+    if blacklisted_token:
+        raise jwt_exception
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload["sub"]
+        expiration = datetime.fromtimestamp(payload["exp"])
+        if expiration < datetime.now():
+            raise jwt_exception
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise jwt_exception
+    user = db.query(User).filter(User.username == username).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
+async def is_superuser(user: Annotated[User, Depends(authenticated)]):
+    if not user.is_superuser: # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The user doesn't have enough privileges",
+        )
+    return user
+
+def register_user(user:UserAdmin, db: Annotated[Session, Depends(get_db)]):
+    extsing_user = db.query(User).filter(User.username == user.username).first()
+    if extsing_user:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="User already exists.",
+        )
+    new_user = User(
+        username=user.username,
+        hashed_password=pwd_context.hash(user.password),
+        first_name=user.first_name,
+        last_name=user.last_name,
+        email=user.email,
+        is_superuser=user.is_superuser,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return user
+
+def create_superuser(username: str, password: str, first_name: str, last_name: str, email: str):
+    superuser = UserAdmin(
+        username=username,
+        first_name=password,
+        last_name=last_name,
+        email=email,
+        password=password,
+        is_superuser=True,
+    )
+    try:
+        db = AuthSession()
+        register_user(superuser, db)
+    except Exception as e:
+        pass
+        
