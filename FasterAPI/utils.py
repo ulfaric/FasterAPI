@@ -6,8 +6,6 @@ from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from .schemas import UserAdmin
-
 from . import (
     ALGORITHM,
     SECRET_KEY,
@@ -20,6 +18,10 @@ from . import (
     pwd_context,
 )
 from .models import BlacklistedToken, User
+from .schemas import UserAdmin
+
+if TOKEN_EXPIRATION_TIME is None:
+    raise Exception("TOKEN_EXPIRATION_TIME is not set.")
 
 
 async def cleanup_expired_tokens():
@@ -52,6 +54,10 @@ async def authenticate_user(db: Session, username: str, password: str):
     if not verify_password(password, user.hashed_password):
         return False
     return user
+
+
+if SECRET_KEY is None:
+    raise Exception("SECRET_KEY is not set.")
 
 
 def create_access_token(data: dict):

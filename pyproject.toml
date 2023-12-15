@@ -1,6 +1,6 @@
 [project]
 name = "FasterAPI"
-version = "0.0.6"
+version = "0.0.7"
 authors = [
   { name="Yifei Ren", email="ryf0510@live.com" },
 ]
@@ -17,6 +17,7 @@ dependencies = [
   "fastapi[all]",
   "sqlalchemy",
   "python-jose[cryptography]",
+  "bcrypt==4.0.1",
   "passlib[bcrypt]",
   "psycopg2-binary",
 ]
