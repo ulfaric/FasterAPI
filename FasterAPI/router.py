@@ -1,13 +1,16 @@
+from datetime import datetime
+
+import yaml
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from jose import JWTError, jwt
+from jose import JWTError
 from sqlalchemy.orm import Session
-from datetime import datetime
-from . import TOKEN_URL, get_db, oauth2_scheme, ALGORITHM, SECRET_KEY
-from .models import BlacklistedToken, User
-from .utils import authenticate_user, create_access_token, register_user, authenticated, is_superuser, blacklist_token
+
+from . import TOKEN_URL, get_db, oauth2_scheme, pwd_context
+from .models import User
 from .schemas import UserAdmin, UserInfo
-import yaml
+from .utils import (authenticate_user, authenticated, blacklist_token,
+                    create_access_token, is_superuser, register_user)
 
 with open("auth_config.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -81,6 +84,7 @@ if ALLOW_SELF_REGISTRATION:
         existing_user.first_name = new_userinfo.first_name # type: ignore
         existing_user.last_name = new_userinfo.last_name # type: ignore
         existing_user.email = new_userinfo.email # type: ignore
+        existing_user.hashed_password = pwd_context.hash(new_userinfo.password) # type: ignore
         db.commit()
         return existing_user   
 else:
@@ -96,6 +100,7 @@ else:
         existing_user.first_name = new_userinfo.first_name # type: ignore
         existing_user.last_name = new_userinfo.last_name # type: ignore
         existing_user.email = new_userinfo.email # type: ignore
+        existing_user.hashed_password = pwd_context.hash(new_userinfo.password) # type: ignore
         db.commit()
         return existing_user
 
