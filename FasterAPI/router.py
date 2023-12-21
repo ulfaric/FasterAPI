@@ -88,47 +88,42 @@ async def get_user(user: User = Depends(authenticated), db: Session = Depends(ge
 
 if ALLOW_SELF_REGISTRATION:
 
-    @auth_router.patch("/users/update", tags=["Users"], response_model=UserInfo)
-    async def update_user_self(
+    @auth_router.patch(
+        "/users/update/{username}", tags=["Users"], response_model=UserInfo
+    )
+    async def update_user(
+        username: str,
         new_userinfo: UserUpdate,
         db: Session = Depends(get_db),
         user: User = Depends(authenticated),
     ):
-        """User information self-update"""
-        user.first_name = new_userinfo.first_name  # type: ignore
-        user.last_name = new_userinfo.last_name  # type: ignore
-        user.email = new_userinfo.email  # type: ignore
-        user.hashed_password = pwd_context.hash(new_userinfo.password)  # type: ignore
+        """Update a user's information"""
+        existing_user = db.query(User).filter(User.username == username).first()
+        if not existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+        existing_user.first_name = new_userinfo.first_name  # type: ignore
+        existing_user.last_name = new_userinfo.last_name  # type: ignore
+        existing_user.email = new_userinfo.email  # type: ignore
+        existing_user.hashed_password = pwd_context.hash(new_userinfo.password)  # type: ignore
         db.commit()
-        return user
+        return existing_user
 
 else:
-    
-    @auth_router.patch("/users/update", tags=["Users"], response_model=UserInfo)
-    async def update_user_self(
-        new_userinfo: UserUpdate,
-        db: Session = Depends(get_db),
-        user: User = Depends(authenticated),
-    ):
-       """User information self-update"""
-        user.first_name = new_userinfo.first_name  # type: ignore
-        user.last_name = new_userinfo.last_name  # type: ignore
-        user.email = new_userinfo.email  # type: ignore
-        user.hashed_password = pwd_context.hash(new_userinfo.password)  # type: ignore
-        db.commit()
-        return user
 
-    @auth_router.patch("/users/update/{username}", tags=["Users"], response_model=UserInfo)
-    async def update_user_other(
+    @auth_router.patch(
+        "/users/update/{username}", tags=["Users"], response_model=UserInfo
+    )
+    async def update_user(
         username: str,
         new_userinfo: UserUpdate,
         db: Session = Depends(get_db),
         user: User = Depends(is_superuser),
     ):
         """Update a user's information"""
-        existing_user = (
-            db.query(User).filter(User.username == username).first()
-        )
+        existing_user = db.query(User).filter(User.username == username).first()
         if not existing_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
