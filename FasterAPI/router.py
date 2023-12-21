@@ -89,7 +89,7 @@ async def get_user(user: User = Depends(authenticated), db: Session = Depends(ge
 if ALLOW_SELF_REGISTRATION:
 
     @auth_router.patch("/users/update", tags=["Users"], response_model=UserInfo)
-    async def update_user_info(
+    async def update_user_self(
         new_userinfo: UserUpdate,
         db: Session = Depends(get_db),
         user: User = Depends(authenticated),
@@ -105,7 +105,7 @@ if ALLOW_SELF_REGISTRATION:
 else:
     
     @auth_router.patch("/users/update", tags=["Users"], response_model=UserInfo)
-    async def update_user_info(
+    async def update_user_self(
         new_userinfo: UserUpdate,
         db: Session = Depends(get_db),
         user: User = Depends(authenticated),
@@ -119,7 +119,7 @@ else:
         return user
 
     @auth_router.patch("/users/update/{username}", tags=["Users"], response_model=UserInfo)
-    async def update_user(
+    async def update_user_other(
         username: str,
         new_userinfo: UserUpdate,
         db: Session = Depends(get_db),
