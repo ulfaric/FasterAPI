@@ -89,7 +89,7 @@ async def get_user(user: User = Depends(authenticated), db: Session = Depends(ge
 if ALLOW_SELF_REGISTRATION:
 
     @auth_router.patch(
-        "/users/update", tags=["Users"], response_model=UserInfo
+        "/users/update/{username}", tags=["Users"], response_model=UserInfo
     )
     async def update_user(
         username: str,
@@ -114,7 +114,7 @@ if ALLOW_SELF_REGISTRATION:
 else:
 
     @auth_router.patch(
-        "/users/update", tags=["Users"], response_model=UserInfo
+        "/users/update/{username}", tags=["Users"], response_model=UserInfo
     )
     async def update_user(
         username: str,
@@ -137,7 +137,7 @@ else:
         return existing_user
 
 
-@auth_router.delete("/users/delete", tags=["Users"], response_model=UserInfo)
+@auth_router.delete("/users/delete/{username}", tags=["Users"], response_model=UserInfo)
 async def delete_user(
     username: str, db: Session = Depends(get_db), user: User = Depends(is_superuser)
 ):
