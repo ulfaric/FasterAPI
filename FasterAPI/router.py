@@ -75,7 +75,7 @@ if ALLOW_SELF_REGISTRATION:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User can only update its own information",
             )
-        existing_user = db.query(User).filter(User.username == new_userinfo.username).first()
+        existing_user = db.query(User).filter(User.username == user.username).first()
         if not existing_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
