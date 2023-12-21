@@ -8,14 +8,15 @@ class UserInfo(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
+    is_superuser: bool
 
 
 class UserCreate(UserInfo):
     """Schemas for User information for administration."""
 
     password: str
-    is_superuser: bool
-    
+
+
 class UserUpdate(BaseModel):
     """Schemas for User information for administration."""
 
