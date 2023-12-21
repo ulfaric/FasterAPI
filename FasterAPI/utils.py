@@ -18,7 +18,7 @@ from . import (
     pwd_context,
 )
 from .models import BlacklistedToken, User
-from .schemas import UserAdmin
+from .schemas import UserCreate
 
 if TOKEN_EXPIRATION_TIME is None:
     raise Exception("TOKEN_EXPIRATION_TIME is not set.")
@@ -120,7 +120,7 @@ async def is_superuser(user: Annotated[User, Depends(authenticated)]):
     return user
 
 
-def register_user(user: UserAdmin, db: Annotated[Session, Depends(get_db)]):
+def register_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
     extsing_user = db.query(User).filter(User.username == user.username).first()
     if extsing_user:
         raise HTTPException(
@@ -144,7 +144,7 @@ def register_user(user: UserAdmin, db: Annotated[Session, Depends(get_db)]):
 def create_superuser(
     username: str, password: str, first_name: str, last_name: str, email: str
 ):
-    superuser = UserAdmin(
+    superuser = UserCreate(
         username=username,
         first_name=password,
         last_name=last_name,
