@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import yaml
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -9,14 +7,8 @@ from sqlalchemy.orm import Session
 from . import TOKEN_URL, get_db, oauth2_scheme, pwd_context
 from .models import User
 from .schemas import UserCreate, UserInfo, UserUpdate
-from .utils import (
-    authenticate_user,
-    authenticated,
-    blacklist_token,
-    create_access_token,
-    is_superuser,
-    register_user,
-)
+from .utils import (authenticate_user, authenticated, blacklist_token,
+                    create_access_token, is_superuser, register_user)
 
 with open("auth_config.yaml", "r") as f:
     config = yaml.safe_load(f)

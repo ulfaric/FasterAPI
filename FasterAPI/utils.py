@@ -6,17 +6,8 @@ from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from . import (
-    ALGORITHM,
-    SECRET_KEY,
-    TOKEN_EXPIRATION_TIME,
-    AuthSession,
-    Base,
-    Engine,
-    get_db,
-    oauth2_scheme,
-    pwd_context,
-)
+from . import (ALGORITHM, SECRET_KEY, TOKEN_EXPIRATION_TIME, AuthSession, Base,
+               Engine, get_db, oauth2_scheme, pwd_context)
 from .models import BlacklistedToken, User
 from .schemas import UserCreate
 
@@ -120,7 +111,18 @@ async def is_superuser(user: Annotated[User, Depends(authenticated)]):
     return user
 
 
-def register_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
+async def verify_user_roles(
+    user: Annotated[User, Depends(authenticated)], roles: list[str]
+):
+    if not set(roles).issubset(set(user.roles)):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The user doesn't have enough privileges",
+        )
+    return user
+
+
+def register_user(user: UserCreate, db: Session):
     extsing_user = db.query(User).filter(User.username == user.username).first()
     if extsing_user:
         raise HTTPException(
@@ -133,6 +135,7 @@ def register_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
         first_name=user.first_name,
         last_name=user.last_name,
         email=user.email,
+        role=user.roles,
         is_superuser=user.is_superuser,
     )
     db.add(new_user)
@@ -142,14 +145,20 @@ def register_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
 
 
 def create_superuser(
-    username: str, password: str, first_name: str, last_name: str, email: str
+    username: str,
+    password: str,
+    first_name: str,
+    last_name: str,
+    email: str,
+    role: str = "superuser",
 ):
     superuser = UserCreate(
         username=username,
-        first_name=password,
+        first_name=first_name,
         last_name=last_name,
         email=email,
         password=password,
+        roles=role,
         is_superuser=True,
     )
     db = AuthSession()
