@@ -129,6 +129,38 @@ else:
         return existing_user
 
 
+@auth_router.post("/users/promote/{username}", tags=["Users"], response_model=UserInfo)
+async def promote_user(
+    username: str, db: Session = Depends(get_db), user: User = Depends(is_superuser)
+):
+    """Promote a user to superuser"""
+    existing_user = db.query(User).filter(User.username == username).first()
+    if not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    existing_user.is_superuser = True  # type: ignore
+    db.commit()
+    return existing_user
+
+
+@auth_router.post("/users/demote/{username}", tags=["Users"], response_model=UserInfo)
+async def demote_user(
+    username: str, db: Session = Depends(get_db), user: User = Depends(is_superuser)
+):
+    """Demote a user to normal user"""
+    existing_user = db.query(User).filter(User.username == username).first()
+    if not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    existing_user.is_superuser = False  # type: ignore
+    db.commit()
+    return existing_user
+
+
 @auth_router.delete("/users/delete/{username}", tags=["Users"], response_model=UserInfo)
 async def delete_user(
     username: str, db: Session = Depends(get_db), user: User = Depends(is_superuser)

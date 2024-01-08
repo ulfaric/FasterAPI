@@ -1,15 +1,24 @@
 import asyncio
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, List
 
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from . import (ALGORITHM, SECRET_KEY, TOKEN_EXPIRATION_TIME, AuthSession, Base,
-               Engine, get_db, oauth2_scheme, pwd_context)
-from .models import BlacklistedToken, User
-from .schemas import UserCreate
+from . import (
+    ALGORITHM,
+    SECRET_KEY,
+    TOKEN_EXPIRATION_TIME,
+    AuthSession,
+    Base,
+    Engine,
+    get_db,
+    oauth2_scheme,
+    pwd_context,
+)
+from .models import BlacklistedToken, User, UserPrivilege
+from .schemas import UserCreate, Privilege
 
 if TOKEN_EXPIRATION_TIME is None:
     raise Exception("TOKEN_EXPIRATION_TIME is not set.")
@@ -114,7 +123,8 @@ async def is_superuser(user: Annotated[User, Depends(authenticated)]):
 async def verify_user_roles(
     user: Annotated[User, Depends(authenticated)], roles: list[str]
 ):
-    if not set(roles).issubset(set(user.roles)):
+    user_roles = user.priviliege.split(", ")
+    if not set(roles).issubset(set(user_roles)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="The user doesn't have enough privileges",
@@ -135,12 +145,15 @@ def register_user(user: UserCreate, db: Session):
         first_name=user.first_name,
         last_name=user.last_name,
         email=user.email,
-        role=user.roles,
         is_superuser=user.is_superuser,
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    for privilege in user.privileges:
+        new_role = UserPrivilege(user_id=new_user.id, privilege=privilege.privilege)
+        db.add(new_role)
+    db.commit()
     return user
 
 
@@ -150,15 +163,15 @@ def create_superuser(
     first_name: str,
     last_name: str,
     email: str,
-    role: str = "superuser",
 ):
+    role = Privilege(privilege="superuser")
     superuser = UserCreate(
         username=username,
         first_name=first_name,
         last_name=last_name,
         email=email,
         password=password,
-        roles=role,
+        privileges=[role],
         is_superuser=True,
     )
     db = AuthSession()

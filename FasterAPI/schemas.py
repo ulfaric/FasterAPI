@@ -1,4 +1,11 @@
 from pydantic import BaseModel, EmailStr
+from typing import List
+
+
+class Privilege(BaseModel):
+    """Schemas for User Priviliege information."""
+
+    privilege: str
 
 
 class UserInfo(BaseModel):
@@ -8,12 +15,13 @@ class UserInfo(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
-    roles: str
+    privileges: List[Privilege]
     is_superuser: bool
 
 
 class UserCreate(UserInfo):
     """Schemas for User information for administration."""
+
     password: str
 
 
