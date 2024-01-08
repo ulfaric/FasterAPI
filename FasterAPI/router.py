@@ -5,10 +5,20 @@ from jose import JWTError
 from sqlalchemy.orm import Session
 
 from . import TOKEN_URL, get_db, oauth2_scheme, pwd_context
-from .models import User
-from .schemas import UserCreate, UserInfo, UserUpdate
-from .utils import (authenticate_user, authenticated, blacklist_token,
-                    create_access_token, is_superuser, register_user)
+from .models import User, UserPrivilege
+from .schemas import (
+    UserCreate,
+    UserInfo,
+    UserUpdate,
+)
+from .utils import (
+    authenticate_user,
+    authenticated,
+    blacklist_token,
+    create_access_token,
+    is_superuser,
+    register_user,
+)
 
 with open("auth_config.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -55,7 +65,6 @@ if ALLOW_SELF_REGISTRATION:
         new_user: UserCreate, db: Session = Depends(get_db)
     ):
         """Register a new user"""
-        new_user.is_superuser = False  # type: ignore
         register_user(new_user, db)
         return {"detail": "user successfully registered"}
 
@@ -145,7 +154,7 @@ async def promote_user(
     return existing_user
 
 
-@auth_router.post("/users/demote/{username}", tags=["Users"], response_model=UserInfo)
+@auth_router.delete("/users/demote/{username}", tags=["Users"], response_model=UserInfo)
 async def demote_user(
     username: str, db: Session = Depends(get_db), user: User = Depends(is_superuser)
 ):
@@ -157,6 +166,56 @@ async def demote_user(
             detail="User not found",
         )
     existing_user.is_superuser = False  # type: ignore
+    db.commit()
+    return existing_user
+
+
+@auth_router.post("/users/privilege/add", tags=["Users"], response_model=UserInfo)
+async def add_privilege(
+    username: str,
+    privilege: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(is_superuser),
+):
+    """Add a privilege to a user"""
+    existing_user = db.query(User).filter(User.username == username).first()
+    if not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    new_privilege = UserPrivilege(user_id=existing_user.id, privilege=privilege)
+    db.add(new_privilege)
+    db.commit()
+    return existing_user
+
+
+@auth_router.post("/users/privilege/remove", tags=["Users"], response_model=UserInfo)
+async def remove_privilege(
+    username: str,
+    privilege: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(is_superuser),
+):
+    """Remove a privilege from a user"""
+    existing_user = db.query(User).filter(User.username == username).first()
+    if not existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    existing_privilege = (
+        db.query(UserPrivilege)
+        .filter(UserPrivilege.user_id == existing_user.id)
+        .filter(UserPrivilege.privilege == privilege)
+        .first()
+    )
+    if not existing_privilege:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Privilege not found",
+        )
+    db.delete(existing_privilege)
     db.commit()
     return existing_user
 

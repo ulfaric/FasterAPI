@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
@@ -17,7 +17,7 @@ from . import (
     oauth2_scheme,
     pwd_context,
 )
-from .models import BlacklistedToken, User, UserPrivilege
+from .models import BlacklistedToken, User
 from .schemas import UserCreate, Privilege
 
 if TOKEN_EXPIRATION_TIME is None:
@@ -149,11 +149,6 @@ def register_user(user: UserCreate, db: Session):
     )
     db.add(new_user)
     db.commit()
-    db.refresh(new_user)
-    for privilege in user.privileges:
-        new_role = UserPrivilege(user_id=new_user.id, privilege=privilege.privilege)
-        db.add(new_role)
-    db.commit()
     return user
 
 
@@ -171,7 +166,6 @@ def create_superuser(
         last_name=last_name,
         email=email,
         password=password,
-        privileges=[role],
         is_superuser=True,
     )
     db = AuthSession()

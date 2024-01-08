@@ -19,10 +19,15 @@ class UserInfo(BaseModel):
     is_superuser: bool
 
 
-class UserCreate(UserInfo):
-    """Schemas for User information for administration."""
+class UserCreate(BaseModel):
+    """Schemas for User registration under superuser."""
 
+    username: str
+    first_name: str
+    last_name: str
+    email: EmailStr
     password: str
+    is_superuser: bool
 
 
 class UserUpdate(BaseModel):
