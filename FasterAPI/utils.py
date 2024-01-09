@@ -175,22 +175,3 @@ async def is_superuser(user: Annotated[User, Depends(authenticated)]):
             detail="The user doesn't have enough privileges",
         )
     return user
-
-
-async def verify_user_privilege(
-    db: Annotated[Session, Depends(get_db)],
-    user: Annotated[User, Depends(authenticated)],
-    privileges: list[str],
-):
-    """A dependency function to check if the user has the required privileges.""" ""
-    granted_privileges = (
-        db.query(UserPrivilege).filter(UserPrivilege.user_id == user.id).all()
-    )
-    granted_privileges = [privilege.privilege for privilege in granted_privileges]
-    if set(privileges).issubset(set(granted_privileges)):
-        return user
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="The user doesn't have enough privileges",
-        )

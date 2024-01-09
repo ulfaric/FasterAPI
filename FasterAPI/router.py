@@ -1,16 +1,14 @@
+from typing import List
+
 import yaml
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.orm import Session
 
 from . import TOKEN_URL, get_db, oauth2_scheme, pwd_context
 from .models import User, UserPrivilege
-from .schemas import (
-    UserCreate,
-    UserInfo,
-    UserUpdate,
-)
+from .schemas import UserCreate, UserInfo, UserUpdate
 from .utils import (
     authenticate_user,
     authenticated,
@@ -242,3 +240,25 @@ async def get_all_users(
 ):
     """Get all users"""
     return db.query(User).all()
+
+
+@auth_router.post("/users/verify/privilege/", tags=["Users"])
+async def verify_user_privilege(
+    privileges: List[str],
+    db: Session = Depends(get_db),
+    user: User = Depends(authenticated),
+):
+    """Verify a user's privilege(s)."""
+    granted_privileges = (
+        db.query(UserPrivilege).filter(UserPrivilege.user_id == user.id).all()
+    )
+    granted_privileges = [privilege.privilege for privilege in granted_privileges]
+    if set(privileges).issubset(set(granted_privileges)):
+        return Response(status_code=status.HTTP_200_OK)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The user doesn't have the required privileges",
+        )
+    
+    
