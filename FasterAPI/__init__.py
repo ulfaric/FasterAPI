@@ -1,12 +1,14 @@
 import logging
 import os
 import secrets
+from datetime import datetime
+import socket
 
 import colorlog
 import yaml
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-from sqlalchemy import create_engine
+from sqlalchemy import Column, DateTime, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -15,7 +17,7 @@ DEFAULT_ALGORITHM = "HS256"
 DEFAULT_TOKEN_URL = "/login"
 DEFAULT_TOKEN_EXPIRATION_TIME = 15
 
-
+# set up logging
 logger = logging.getLogger(__name__)
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.DEBUG)
@@ -35,6 +37,7 @@ stream_handler.setFormatter(stream_formatter)
 logger.addHandler(stream_handler)
 
 
+# Load configuration
 def load_config(file_path):
     try:
         with open(file_path, "r") as f:
@@ -57,16 +60,7 @@ config = load_config("auth_config.yaml")
 if config is None:
     raise Exception("Configuration file can not be loaded.")
 
-SECRET_KEY = os.getenv("SECRET_KEY", config.get("SECRET_KEY", secrets.token_hex(32)))
-ALGORITHM = os.getenv("ALGORITHM", config.get("ALGORITHM", DEFAULT_ALGORITHM))
-TOKEN_URL = os.getenv("TOKEN_URL", config.get("TOKEN_URL", DEFAULT_TOKEN_URL))
-TOKEN_EXPIRATION_TIME = int(
-    os.getenv(
-        "TOKEN_EXPIRATION_TIME",
-        config.get("TOKEN_EXPIRATION_TIME", DEFAULT_TOKEN_EXPIRATION_TIME),
-    )
-)
-EXPIRED_TOKENS_CLEANER_INTERVAL = TOKEN_EXPIRATION_TIME * 60
+# set up database
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "SQLALCHEMY_DATABASE_URL", config.get("SQLALCHEMY_DATABASE_URL")
 )
@@ -78,9 +72,6 @@ Engine = create_engine(SQLALCHEMY_DATABASE_URL)
 AuthSession = sessionmaker(autocommit=False, autoflush=False, bind=Engine)
 Base = declarative_base()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
-
 
 def get_db():
     db = AuthSession()
@@ -88,3 +79,40 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+class SecretKey(Base):
+    __tablename__ = "secret_keys"
+    id = Column(Integer, primary_key=True, index=True)
+    hostname = Column(String, unique=True, index=True)
+    secret_key = Column(String)
+    created_at = Column(DateTime, default=datetime.now())
+
+
+# assign values from config or environment variables
+db = AuthSession()
+Base.metadata.create_all(bind=Engine)
+existing_secret_key = db.query(SecretKey).filter(SecretKey.hostname == socket.gethostname()).first()
+if existing_secret_key:
+    SECRET_KEY = os.getenv("SECRET_KEY", config.get("SECRET_KEY", existing_secret_key))
+    if SECRET_KEY != existing_secret_key.secret_key:
+        existing_secret_key.secret_key = SECRET_KEY # type: ignore
+        db.commit()
+else:
+    SECRET_KEY = os.getenv("SECRET_KEY", config.get("SECRET_KEY", secrets.token_hex(32)))
+    db.add(SecretKey(hostname=socket.gethostname(), secret_key=SECRET_KEY))
+    db.commit()  
+db.close()
+
+ALGORITHM = os.getenv("ALGORITHM", config.get("ALGORITHM", DEFAULT_ALGORITHM))
+TOKEN_URL = os.getenv("TOKEN_URL", config.get("TOKEN_URL", DEFAULT_TOKEN_URL))
+TOKEN_EXPIRATION_TIME = int(
+    os.getenv(
+        "TOKEN_EXPIRATION_TIME",
+        config.get("TOKEN_EXPIRATION_TIME", DEFAULT_TOKEN_EXPIRATION_TIME),
+    )
+)
+EXPIRED_TOKENS_CLEANER_INTERVAL = TOKEN_EXPIRATION_TIME * 60
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
