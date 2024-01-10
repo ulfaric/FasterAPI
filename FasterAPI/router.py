@@ -1,22 +1,17 @@
 from typing import List
 
 import yaml
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.orm import Session
 
 from . import TOKEN_URL, get_db, oauth2_scheme, pwd_context
+from .dependencies import authenticated, is_superuser
 from .models import User, UserPrivilege
 from .schemas import UserCreate, UserInfo, UserUpdate
-from .utils import (
-    authenticate_user,
-    authenticated,
-    blacklist_token,
-    create_access_token,
-    is_superuser,
-    register_user,
-)
+from .utils import (authenticate_user, blacklist_token, create_access_token,
+                    register_user)
 
 with open("auth_config.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -106,7 +101,8 @@ if ALLOW_SELF_REGISTRATION:
         existing_user.first_name = new_userinfo.first_name  # type: ignore
         existing_user.last_name = new_userinfo.last_name  # type: ignore
         existing_user.email = new_userinfo.email  # type: ignore
-        existing_user.hashed_password = pwd_context.hash(new_userinfo.password)  # type: ignore
+        if new_userinfo.password != "":
+            existing_user.hashed_password = pwd_context.hash(new_userinfo.password)  # type: ignore
         db.commit()
         return existing_user
 
@@ -131,7 +127,8 @@ else:
         existing_user.first_name = new_userinfo.first_name  # type: ignore
         existing_user.last_name = new_userinfo.last_name  # type: ignore
         existing_user.email = new_userinfo.email  # type: ignore
-        existing_user.hashed_password = pwd_context.hash(new_userinfo.password)  # type: ignore
+        if new_userinfo.password != "":
+            existing_user.hashed_password = pwd_context.hash(new_userinfo.password)  # type: ignore
         db.commit()
         return existing_user
 
@@ -241,24 +238,3 @@ async def get_all_users(
     """Get all users"""
     return db.query(User).all()
 
-
-@auth_router.post("/users/verify/privilege/", tags=["Users"])
-async def verify_user_privilege(
-    privileges: List[str],
-    db: Session = Depends(get_db),
-    user: User = Depends(authenticated),
-):
-    """Verify a user's privilege(s)."""
-    granted_privileges = (
-        db.query(UserPrivilege).filter(UserPrivilege.user_id == user.id).all()
-    )
-    granted_privileges = [privilege.privilege for privilege in granted_privileges]
-    if set(privileges).issubset(set(granted_privileges)):
-        return Response(status_code=status.HTTP_200_OK)
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="The user doesn't have the required privileges",
-        )
-    
-    

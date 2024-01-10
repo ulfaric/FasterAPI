@@ -1,9 +1,8 @@
 import asyncio
 from datetime import datetime, timedelta
-from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
-from jose import JWTError, jwt
+from fastapi import HTTPException, status
+from jose import jwt
 from sqlalchemy.orm import Session
 
 from . import (
@@ -13,12 +12,10 @@ from . import (
     AuthSession,
     Base,
     Engine,
-    get_db,
-    oauth2_scheme,
     pwd_context,
 )
-from .models import BlacklistedToken, User, UserPrivilege
-from .schemas import UserCreate, Privilege
+from .models import BlacklistedToken, User
+from .schemas import UserCreate
 
 if TOKEN_EXPIRATION_TIME is None:
     raise Exception("TOKEN_EXPIRATION_TIME is not set.")
@@ -112,7 +109,6 @@ def create_superuser(
     email: str,
 ):
     """Creates a superuser."""
-    role = Privilege(privilege="superuser")
     superuser = UserCreate(
         username=username,
         first_name=first_name,
@@ -131,47 +127,27 @@ def create_superuser(
         db.close()
 
 
-async def authenticated(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    db: Annotated[Session, Depends(get_db)],
+def create_user(
+    username: str,
+    password: str,
+    first_name: str,
+    last_name: str,
+    email: str,
 ):
-    """A dependency function to authenticate the user."""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
+    """Creates a user."""
+    user = UserCreate(
+        username=username,
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        password=password,
+        is_superuser=False,
     )
-    jwt_exception = HTTPException(
-        status_code=status.HTTP_406_NOT_ACCEPTABLE,
-        detail="Invalid JWT token",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    blacklisted_token = (
-        db.query(BlacklistedToken).filter(BlacklistedToken.token == token).first()
-    )
-    if blacklisted_token:
-        raise jwt_exception
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload["sub"]
-        expiration = datetime.fromtimestamp(payload["exp"])
-        if expiration < datetime.now():
-            raise jwt_exception
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise jwt_exception
-    user = db.query(User).filter(User.username == username).first()
-    if user is None:
-        raise credentials_exception
-    return user
-
-
-async def is_superuser(user: Annotated[User, Depends(authenticated)]):
-    """A dependency function to check if the user is a superuser."""
-    if not user.is_superuser:  # type: ignore
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="The user doesn't have enough privileges",
-        )
-    return user
+    db = AuthSession()
+    existing_user = db.query(User).filter(User.username == user.username).first()
+    if existing_user:
+        db.close()
+        return
+    else:
+        register_user(user, db)
+        db.close()
