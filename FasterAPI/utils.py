@@ -14,7 +14,7 @@ from . import (
     Engine,
     pwd_context,
 )
-from .models import BlacklistedToken, User
+from .models import BlacklistedToken, User, ActiveSession
 from .schemas import UserCreate
 
 if TOKEN_EXPIRATION_TIME is None:
@@ -69,6 +69,24 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def create_session(token: str, db: Session, client:str):
+    """Activates the token upon user login."""
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    username = payload["sub"]
+    exp = datetime.fromtimestamp(payload["exp"])
+    existing_active_token = (
+        db.query(ActiveSession).filter(ActiveSession.username == username).first()
+    )
+    if existing_active_token:
+        existing_active_token.client = client # type: ignore
+        existing_active_token.exp = exp # type: ignore
+        db.commit()
+    else:
+        token_to_activate = ActiveSession(username=username, client=client, exp=exp)
+        db.add(token_to_activate)
+        db.commit()
 
 
 def blacklist_token(token: str, db: Session):

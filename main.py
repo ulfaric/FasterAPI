@@ -10,4 +10,4 @@ if __name__ == "__main__":
         last_name="admin",
         email="admin@admin.com"
     )
-    uvicorn.run("app:Myapp", host="127.0.0.1", log_level="info", reload=True)
+    uvicorn.run("FasterAPI.app:app", host="127.0.0.1", port=8080, log_level="info", reload=True)

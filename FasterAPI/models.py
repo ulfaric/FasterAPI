@@ -17,6 +17,7 @@ class User(Base):
     privileges = relationship(
         "UserPrivilege", back_populates="user", cascade="all,delete"
     )
+    session = relationship("ActiveSession", back_populates="user", cascade="all,delete", uselist=False)
 
 
 class UserPrivilege(Base):
@@ -25,8 +26,19 @@ class UserPrivilege(Base):
     __tablename__ = "user_privileges"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    privilege = Column(String)
+    scope = Column(String)
     user = relationship("User", back_populates="privileges")
+
+
+class ActiveSession(Base):
+    """Active session model""" ""
+
+    __tablename__ = "active_sessions"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, ForeignKey("users.username"), index=True)
+    client = Column(String, unique=True, index=True)
+    exp = Column(DateTime)
+    user = relationship("User", back_populates="session")
 
 
 class BlacklistedToken(Base):

@@ -1,6 +1,6 @@
 [project]
 name = "FasterAPI"
-version = "0.0.16"
+version = "0.0.18"
 authors = [
   { name="Yifei Ren", email="ryf0510@live.com" },
 ]

@@ -1,4 +1,4 @@
-SQLALCHEMY_DATABASE_URL: "postgresql://postgres:postgres546825@192.168.0.3:5432/test"
+SQLALCHEMY_DATABASE_URL: "postgresql://postgres:HaveNoClue4873@20.227.130.55:5432/test"
 SECRET_KEY: "8cfba7f89fca29a5f86cd8e02cb5381070690e378fc26cce4a311f84ce93673a"
 ALGORITHM: "HS256"
 TOKEN_URL: "login"

@@ -1,7 +1,5 @@
-from typing import List
-
 import yaml
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.orm import Session
@@ -10,8 +8,13 @@ from . import TOKEN_URL, get_db, oauth2_scheme, pwd_context
 from .dependencies import authenticated, is_superuser
 from .models import User, UserPrivilege
 from .schemas import UserCreate, UserInfo, UserUpdate
-from .utils import (authenticate_user, blacklist_token, create_access_token,
-                    register_user)
+from .utils import (
+    create_session,
+    authenticate_user,
+    blacklist_token,
+    create_access_token,
+    register_user,
+)
 
 with open("auth_config.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -25,7 +28,9 @@ auth_router = APIRouter()
 
 @auth_router.post(f"/{TOKEN_URL}", tags=["Authentication"])
 async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+    request: Request,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
 ):
     """Authenticate a user and return a JWT access token"""
     user = await authenticate_user(db, form_data.username, form_data.password)
@@ -34,7 +39,14 @@ async def login_for_access_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
-    access_token = create_access_token(data={"sub": user.username})
+    user_privileges = (
+        db.query(UserPrivilege).filter(UserPrivilege.user_id == user.id).all()
+    )
+    user_privileges = [privilege.scope for privilege in user_privileges]
+    access_token = create_access_token(
+        data={"sub": user.username, "scopes": user_privileges}
+    )
+    create_session(access_token, db, request.client.host) # type: ignore
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -202,7 +214,7 @@ async def remove_privilege(
     existing_privilege = (
         db.query(UserPrivilege)
         .filter(UserPrivilege.user_id == existing_user.id)
-        .filter(UserPrivilege.privilege == privilege)
+        .filter(UserPrivilege.scope == privilege)
         .first()
     )
     if not existing_privilege:
@@ -237,4 +249,3 @@ async def get_all_users(
 ):
     """Get all users"""
     return db.query(User).all()
-

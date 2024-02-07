@@ -16,8 +16,8 @@ SECRET_KEY: "8cfba7f89fca29a5f86cd8e02cb5381070690e378fc26cce4a311f84ce93672a" #
 ALGORITHM: "HS256" # encryption algorithm
 TOKEN_URL: "login" # url for login
 TOKEN_EXPIRATION_TIME: 1 # token expiration time in minutes.
-ALLOW_SELF_REGISTRATION: True # if ture, anyone could register a user account. Otherwise, only superuser could.
-
+ALLOW_SELF_REGISTRATION: True # if true, anyone could register a user account. Otherwise, only superuser could.
+ALLOW_MULTI_SESSIONS: False # if true, same user can login from different client. Otherwise, only one client is allowed.
 # if any following configuration is missing, lowest security config will used for faster development!
 # for non-website (include web app) you may want to use the default settings so your request won't be blocked.
 ALLOW_CREDENTIALS: False # Here goes your choice for whether allow credential for CSRF protection
