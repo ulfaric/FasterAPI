@@ -76,12 +76,12 @@ def create_session(token: str, db: Session, client:str):
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     username = payload["sub"]
     exp = datetime.fromtimestamp(payload["exp"])
-    existing_active_token = (
+    existing_active_session = (
         db.query(ActiveSession).filter(ActiveSession.username == username).first()
     )
-    if existing_active_token:
-        existing_active_token.client = client # type: ignore
-        existing_active_token.exp = exp # type: ignore
+    if existing_active_session:
+        existing_active_session.client = client # type: ignore
+        existing_active_session.exp = exp # type: ignore
         db.commit()
     else:
         token_to_activate = ActiveSession(username=username, client=client, exp=exp)

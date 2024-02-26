@@ -50,23 +50,23 @@ async def authenticated(
         username: str = payload["sub"]
         scopes: List[str] = payload["scopes"]
         expiration = datetime.fromtimestamp(payload["exp"])
-        if expiration < datetime.now():
-            raise jwt_expired_exception
     except JWTError:
         raise jwt_exception
+    if expiration < datetime.now():
+        raise jwt_expired_exception
     user = db.query(User).filter(User.username == username).first()
-    user_privileges = db.query(UserPrivilege).filter(UserPrivilege.user_id == user.id).all()  # type: ignore
-    user_scopes = [privilege.scope for privilege in user_privileges]
     if user is None:
         raise credentials_exception
+    user_privileges = db.query(UserPrivilege).filter(UserPrivilege.user_id == user.id).all()  # type: ignore
+    user_scopes = [privilege.scope for privilege in user_privileges]
+    if not set(scopes).issubset(set(user_scopes)):
+        raise scope_exception
     active_session = (
         db.query(ActiveSession).filter(ActiveSession.username == username).first()
     )
     if ALLOW_MULTI_SESSIONS is False:
         if request.client.host != str(active_session.client):  # type: ignore
             raise multi_session_exception
-    if not set(scopes).issubset(set(user_scopes)):
-        raise scope_exception
     return user
 
 

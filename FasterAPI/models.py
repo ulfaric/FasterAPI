@@ -35,8 +35,8 @@ class ActiveSession(Base):
 
     __tablename__ = "active_sessions"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, ForeignKey("users.username"), index=True)
-    client = Column(String, unique=True, index=True)
+    username = Column(String, ForeignKey("users.username"), index=True, unique=True)
+    client = Column(String)
     exp = Column(DateTime)
     user = relationship("User", back_populates="session")
 
