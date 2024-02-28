@@ -15,7 +15,7 @@ from sqlalchemy.orm import sessionmaker
 
 # Default values
 DEFAULT_ALGORITHM = "HS256"
-DEFAULT_TOKEN_URL = "/login"
+DEFAULT_TOKEN_URL = "login"
 DEFAULT_TOKEN_EXPIRATION_TIME = 15
 
 # set up logging
