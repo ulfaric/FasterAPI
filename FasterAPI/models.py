@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
-from sqlalchemy.orm import relationship
+from typing import List
+from datetime import datetime
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from . import Base
 
 
@@ -7,44 +9,48 @@ class User(Base):
     """User model"""
 
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    first_name = Column(String)
-    last_name = Column(String)
-    email = Column(String)
-    hashed_password = Column(String)
-    is_superuser = Column(Boolean, default=False)
-    privileges = relationship(
-        "UserPrivilege", back_populates="user", cascade="all,delete"
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    username: Mapped[str] = mapped_column(unique=True, index=True)
+    first_name: Mapped[str]
+    last_name: Mapped[str]
+    email: Mapped[str]
+    hashed_password: Mapped[str]
+    is_superuser: Mapped[bool]
+    privileges: Mapped[List["UserPrivilege"]] = relationship(
+        back_populates="user", cascade="all,delete"
     )
-    session = relationship("ActiveSession", back_populates="user", cascade="all,delete", uselist=False)
+    session: Mapped["ActiveSession"] = relationship(
+        back_populates="user", cascade="all,delete"
+    )
 
 
 class UserPrivilege(Base):
     """User role model"""
 
     __tablename__ = "user_privileges"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    scope = Column(String)
-    user = relationship("User", back_populates="privileges")
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    scope: Mapped[str]
+    user: Mapped["User"] = relationship("User", back_populates="privileges")
 
 
 class ActiveSession(Base):
     """Active session model""" ""
 
     __tablename__ = "active_sessions"
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, ForeignKey("users.username"), index=True, unique=True)
-    client = Column(String)
-    exp = Column(DateTime)
-    user = relationship("User", back_populates="session")
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    username: Mapped[str] = mapped_column(
+        ForeignKey("users.username"), index=True, unique=True
+    )
+    client: Mapped[str]
+    exp: Mapped[datetime]
+    user: Mapped["User"] = relationship("User", back_populates="session")
 
 
 class BlacklistedToken(Base):
     """Blacklisted token model""" ""
 
     __tablename__ = "blacklisted_tokens"
-    id = Column(Integer, primary_key=True, index=True)
-    token = Column(String, unique=True, index=True)
-    exp = Column(DateTime)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    token: Mapped[str] = mapped_column(unique=True, index=True)
+    exp: Mapped[datetime]

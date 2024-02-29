@@ -1,17 +1,16 @@
 import logging
 import os
-from re import T
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 import socket
 
 import colorlog
 import yaml
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-from sqlalchemy import Column, DateTime, Integer, String, create_engine
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Mapped, mapped_column
 
 # Default values
 DEFAULT_ALGORITHM = "HS256"
@@ -84,10 +83,10 @@ def get_db():
 
 class SecretKey(Base):
     __tablename__ = "secret_keys"
-    id = Column(Integer, primary_key=True, index=True)
-    hostname = Column(String, unique=True, index=True)
-    secret_key = Column(String)
-    created_at = Column(DateTime, default=datetime.now())
+    id:Mapped[int] = mapped_column(primary_key=True, index=True)
+    hostname:Mapped[str] = mapped_column(unique=True, index=True)
+    secret_key:Mapped[str]
+    created_at:Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
 
 
 # assign values from config or environment variables
