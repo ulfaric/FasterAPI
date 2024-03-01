@@ -30,7 +30,7 @@ class UserPrivilege(Base):
     __tablename__ = "user_privileges"
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    scope: Mapped[str]
+    privilege: Mapped[str]
     user: Mapped["User"] = relationship("User", back_populates="privileges")
 
 

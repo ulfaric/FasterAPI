@@ -1,5 +1,6 @@
+from typing import Annotated
 import yaml
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Security, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.orm import Session
@@ -39,14 +40,10 @@ async def login_for_access_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
-    user_privileges = (
-        db.query(UserPrivilege).filter(UserPrivilege.user_id == user.id).all()
-    )
-    user_privileges = [privilege.scope for privilege in user_privileges]
     access_token = create_access_token(
-        data={"sub": user.username, "scopes": user_privileges}
+        data={"sub": user.username}
     )
-    create_session(access_token, db, request.client.host) # type: ignore
+    create_session(access_token, db, request.client.host)  # type: ignore
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -214,7 +211,7 @@ async def remove_privilege(
     existing_privilege = (
         db.query(UserPrivilege)
         .filter(UserPrivilege.user_id == existing_user.id)
-        .filter(UserPrivilege.scope == privilege)
+        .filter(UserPrivilege.privilege == privilege)
         .first()
     )
     if not existing_privilege:
