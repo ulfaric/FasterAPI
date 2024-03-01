@@ -10,7 +10,7 @@ from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Mapped, mapped_column
+from sqlalchemy.orm import sessionmaker
 
 # Default values
 DEFAULT_ALGORITHM = "HS256"
@@ -81,29 +81,6 @@ def get_db():
         db.close()
 
 
-# class SecretKey(Base):
-#     __tablename__ = "secret_keys"
-#     id:Mapped[int] = mapped_column(primary_key=True, index=True)
-#     hostname:Mapped[str] = mapped_column(unique=True, index=True)
-#     secret_key:Mapped[str]
-#     created_at:Mapped[datetime] = mapped_column(default=datetime.now(timezone.utc))
-
-
-# # assign values from config or environment variables
-# db = AuthSession()
-# Base.metadata.create_all(bind=Engine)
-# existing_secret_key = db.query(SecretKey).filter(SecretKey.hostname == socket.gethostname()).first()
-# if existing_secret_key:
-#     SECRET_KEY = os.getenv("SECRET_KEY", config.get("SECRET_KEY", existing_secret_key))
-#     if SECRET_KEY != existing_secret_key.secret_key:
-#         existing_secret_key.secret_key = SECRET_KEY # type: ignore
-#         db.commit()
-# else:
-#     SECRET_KEY = os.getenv("SECRET_KEY", config.get("SECRET_KEY", secrets.token_hex(32)))
-#     db.add(SecretKey(hostname=socket.gethostname(), secret_key=SECRET_KEY))
-#     db.commit()  
-# db.close()
-
 SECRET_KEY = os.getenv("SECRET_KEY", config.get("SECRET_KEY", secrets.token_hex(32)))
 ALGORITHM = os.getenv("ALGORITHM", config.get("ALGORITHM", DEFAULT_ALGORITHM))
 TOKEN_URL = os.getenv("TOKEN_URL", config.get("TOKEN_URL", DEFAULT_TOKEN_URL))
@@ -114,6 +91,8 @@ TOKEN_EXPIRATION_TIME = int(
     )
 )
 EXPIRED_TOKENS_CLEANER_INTERVAL = TOKEN_EXPIRATION_TIME * 60
-ALLOW_MULTI_SESSIONS = os.getenv("ALLOW_MULTI_SESSIONS", config.get("ALLOW_MULTI_SESSIONS", True))
+ALLOW_MULTI_SESSIONS = os.getenv(
+    "ALLOW_MULTI_SESSIONS", config.get("ALLOW_MULTI_SESSIONS", True)
+)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)

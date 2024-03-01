@@ -4,12 +4,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
-from . import load_config
+from . import config, load_config
 from .router import auth_router
 from .utils import auth_startup
 
 meta_config = load_config("meta_config.yaml")
-config = load_config("auth_config.yaml")
+
 
 app = FastAPI(
     debug=bool(os.getenv("DEBUG", meta_config.get("DEBUG", False))),
