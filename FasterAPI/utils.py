@@ -13,6 +13,9 @@ from . import (
     Base,
     Engine,
     pwd_context,
+    superusers,
+    users,
+    logger
 )
 from .models import BlacklistedToken, User, ActiveSession
 from .schemas import UserCreate
@@ -30,6 +33,7 @@ async def clean_up_expired_tokens():
         ).delete()
         db.commit()
         db.close()
+        logger.debug("Expired tokens cleaned up.")
         await asyncio.sleep(TOKEN_EXPIRATION_TIME)
 
 
@@ -111,6 +115,7 @@ def register_user(user: UserCreate, db: Session):
     )
     db.add(new_user)
     db.commit()
+    logger.debug(f"User {user.username} registered.")
     return user
 
 
@@ -130,14 +135,8 @@ def create_superuser(
         password=password,
         is_superuser=True,
     )
-    db = AuthSession()
-    existing_user = db.query(User).filter(User.username == superuser.username).first()
-    if existing_user:
-        db.close()
-        return
-    else:
-        register_user(superuser, db)
-        db.close()
+    superusers.append(superuser)
+
 
 
 def create_user(
@@ -156,11 +155,5 @@ def create_user(
         password=password,
         is_superuser=False,
     )
-    db = AuthSession()
-    existing_user = db.query(User).filter(User.username == user.username).first()
-    if existing_user:
-        db.close()
-        return
-    else:
-        register_user(user, db)
-        db.close()
+    users.append(user)
+

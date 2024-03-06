@@ -2,7 +2,6 @@ import uvicorn
 from FasterAPI.utils import init_migration, create_superuser
 
 if __name__ == "__main__":
-    init_migration()
     create_superuser(
         username="admin",
         password="admin",

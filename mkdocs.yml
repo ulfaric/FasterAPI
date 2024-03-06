@@ -3,13 +3,16 @@ site_name: FasterAPI
 nav:
   - Home: index.md
   - Docs:
-    - Getting Started: api/index.md
-    - Models:
-        - User: api/models/user.md
-        - User Privilege: api/models/user_privilege.md
-        - Active Session: api/models/active_session.md
-        - Blacklisted Token: api/models/blacklisted_token.md
-    - Endpoints:
+      - Getting Started: api/index.md
+      - Models:
+          - User: api/models/user.md
+          - User Privilege: api/models/user_privilege.md
+          - Active Session: api/models/active_session.md
+          - Blacklisted Token: api/models/blacklisted_token.md
+      - Built-in Endpoints: api/endpoints.md
+  - Guides:
+      - Configuration: guides/configuration.md
+      - Create Model: guides/create_model.md
   - About: about.md
 
 theme:
@@ -31,7 +34,7 @@ plugins:
   - mkdocstrings:
       default_handler: python
 
-extra: 
+extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/ulfaric

@@ -18,12 +18,11 @@ DEFAULT_TOKEN_URL = "login"
 DEFAULT_TOKEN_EXPIRATION_TIME = 15
 
 # set up logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("FasterAPI")
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.DEBUG)
 
 # Define log colors
-cformat = "%(log_color)s%(levelname)s:  %(message)s"
+cformat = "%(log_color)s%(levelname)s:\t%(message)s"
 colors = {
     "DEBUG": "cyan",
     "INFO": "green",
@@ -35,6 +34,7 @@ colors = {
 stream_formatter = colorlog.ColoredFormatter(cformat, log_colors=colors)
 stream_handler.setFormatter(stream_formatter)
 logger.addHandler(stream_handler)
+logger.setLevel(logging.DEBUG)
 
 
 # Load configuration
@@ -113,3 +113,6 @@ ALLOW_MULTI_SESSIONS = os.getenv(
 )
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
+
+superusers = []
+users = []
