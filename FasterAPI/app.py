@@ -3,12 +3,17 @@ import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
-
-from . import config, load_config
+from contextlib import asynccontextmanager
+from . import config, meta_config
 from .router import auth_router
-from .utils import auth_startup
+from .utils import clean_up_expired_tokens
 
-meta_config = load_config("meta_config.yaml")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    expired_token_cleaner = asyncio.create_task(clean_up_expired_tokens())
+    yield
+    expired_token_cleaner.cancel()
 
 
 app = FastAPI(
@@ -32,7 +37,7 @@ app = FastAPI(
     ),
     contact=os.getenv("CONTACT", meta_config.get("CONTACT", None)),  # type: ignore
     summary=os.getenv("SUMMARY", meta_config.get("SUMMARY", None)),
-    on_startup=[lambda: asyncio.create_task(auth_startup())],
+    lifespan=lifespan,
 )
 
 allow_origins = os.getenv("ALLOWED_ORIGINS", config.get("ALLOWED_ORIGINS", ["*"]))

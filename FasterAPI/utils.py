@@ -21,7 +21,7 @@ if TOKEN_EXPIRATION_TIME is None:
     raise Exception("TOKEN_EXPIRATION_TIME is not set.")
 
 
-async def cleanup_expired_tokens():
+async def clean_up_expired_tokens():
     """A async task to cleanup expired tokens from the database. Maintains a optimal performance."""
     while True:
         db = AuthSession()
@@ -31,11 +31,6 @@ async def cleanup_expired_tokens():
         db.commit()
         db.close()
         await asyncio.sleep(TOKEN_EXPIRATION_TIME)
-
-
-async def auth_startup():
-    """Starts the cleanup_expired_tokens task on startup."""
-    asyncio.create_task(cleanup_expired_tokens())
 
 
 def init_migration():
@@ -71,7 +66,7 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-def create_session(token: str, db: Session, client:str):
+def create_session(token: str, db: Session, client: str):
     """Activates the token upon user login."""
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     username = payload["sub"]
@@ -80,8 +75,8 @@ def create_session(token: str, db: Session, client:str):
         db.query(ActiveSession).filter(ActiveSession.username == username).first()
     )
     if existing_active_session:
-        existing_active_session.client = client # type: ignore
-        existing_active_session.exp = exp # type: ignore
+        existing_active_session.client = client  # type: ignore
+        existing_active_session.exp = exp  # type: ignore
         db.commit()
     else:
         token_to_activate = ActiveSession(username=username, client=client, exp=exp)

@@ -38,13 +38,29 @@ logger.addHandler(stream_handler)
 
 
 # Load configuration
-def load_config(file_path):
+def load_auth_config(file_path):
     try:
         with open(file_path, "r") as f:
             config = yaml.safe_load(f)
     except FileNotFoundError:
         logger.warn(
-            f"Configuration file {file_path} not found. Default configuration will be used."
+            f"Authentication Configuration file {file_path} not found. Default configuration will be used."
+        )
+        return {}
+    except PermissionError:
+        logger.warn(
+            f"No permission to read the file {file_path}. Default configuration will be used."
+        )
+        return {}
+    return config
+
+def load_meta_config(file_path):
+    try:
+        with open(file_path, "r") as f:
+            config = yaml.safe_load(f)
+    except FileNotFoundError:
+        logger.warn(
+            f"Meta Configuration file {file_path} not found. Default configuration will be used."
         )
         return {}
     except PermissionError:
@@ -55,7 +71,8 @@ def load_config(file_path):
     return config
 
 
-config = load_config("auth_config.yaml")
+config = load_auth_config("auth_config.yaml")
+meta_config = load_meta_config("meta_config.yaml")
 
 if config is None:
     raise Exception("Configuration file can not be loaded.")

@@ -1,3 +1,10 @@
 DEBUG: True
 TITLE: "My API"
+DESCRIPTION: "This is a description of my API"
 VERSION: "0.0.2"
+OPENAPI_URL: "/openapi.json"
+DOCS_URL: "/docs"
+REDOC_URL: "/redoc"
+TERMS_OF_SERVICE: ""
+CONTACT: ""
+SUMMARY: "This is a summary of my API"
