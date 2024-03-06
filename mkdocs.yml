@@ -1,0 +1,53 @@
+site_name: FasterAPI
+
+nav:
+  - Home: index.md
+  - Docs:
+    - Getting Started: api/index.md
+    - Models:
+        - User: api/models/user.md
+        - User Privilege: api/models/user_privilege.md
+        - Active Session: api/models/active_session.md
+        - Blacklisted Token: api/models/blacklisted_token.md
+    - Endpoints:
+  - About: about.md
+
+theme:
+  name: material
+  palette:
+    primary: amber
+    accent: deep orange
+  features:
+    - navigation.tabs
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+
+extra: 
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/ulfaric
+
+repo_name: ulfaric/FasterAPI
+repo_url: https://github.com/ulfaric/FasterAPI
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
