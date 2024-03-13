@@ -13,6 +13,7 @@ nav:
   - Guides:
       - Configuration: guides/configuration.md
       - Create Model: guides/create_model.md
+      - Built-in Dependencies: guides/dependencies.md
   - About: about.md
 
 theme:

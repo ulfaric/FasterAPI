@@ -84,27 +84,3 @@ async def is_superuser(user: Annotated[User, Depends(authenticated)]):
             detail="The user doesn't have enough privileges",
         )
     return user
-
-
-# class Privilegeverifier:
-#     """A dependency to check if the user has the required privileges."""
-
-#     def __init__(self, privileges: List[str]) -> None:
-#         self._required_privileges = privileges
-
-#     def __call__(self, privileges: List[str]) -> Any:
-#         if set(privileges).issubset(set(self.required_privileges)):
-#             return True
-#         else:
-#             missing_privileges = set(self.required_privileges).difference(
-#                 set(privileges)
-#             )
-#             raise HTTPException(
-#                 status_code=status.HTTP_401_UNAUTHORIZED,
-#                 detail=f"The user doesn't have all required privileges, missing: {missing_privileges}",
-#             )
-
-#     @property
-#     def required_privileges(self):
-#         """Returns the required privileges."""
-#         return self._required_privileges

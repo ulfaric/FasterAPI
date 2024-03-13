@@ -1,6 +1,6 @@
 [project]
 name = "FasterAPI"
-version = "0.0.25"
+version = "0.0.26"
 authors = [
   { name="Yifei Ren", email="ryf0510@live.com" },
 ]
@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/ulfaric/FasterAPI"
+"Homepage" = "https://ulfaric.github.io/FasterAPI/"
 "Bug Tracker" = "https://github.com/ulfaric/FasterAPI/issues"
 
 [tool.setuptools]

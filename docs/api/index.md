@@ -13,8 +13,6 @@ import uvicorn
 from FasterAPI.utils import init_migration, create_superuser
 
 if __name__ == "__main__":
-    # must run at first which creates all tables within the database.
-    init_migration()
     # create a superuser, optional
     create_superuser(
         username="admin",

@@ -38,8 +38,6 @@ import uvicorn
 from FasterAPI.utils import init_migration, create_superuser
 
 if __name__ == "__main__":
-    # must run at first which creates all tables within the database.
-    init_migration()
     # create a superuser, optional
     create_superuser(
         username="admin",
@@ -83,7 +81,7 @@ main.py
 auth_config.yaml
 ```
 
-## New! Now you can add meta data with "meta_config.yaml".
+## New! Now you can add meta data with "meta_config.yaml"
 
 For example, the following "meta_config.yaml" will change the title and version, as well as enable the debug.
 
