@@ -107,12 +107,8 @@ TOKEN_EXPIRATION_TIME = int(
         config.get("TOKEN_EXPIRATION_TIME", DEFAULT_TOKEN_EXPIRATION_TIME),
     )
 )
-EXPIRED_TOKENS_CLEANER_INTERVAL = TOKEN_EXPIRATION_TIME * 60
 ALLOW_MULTI_SESSIONS = os.getenv(
     "ALLOW_MULTI_SESSIONS", config.get("ALLOW_MULTI_SESSIONS", True)
 )
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
-
-superusers = []
-users = []

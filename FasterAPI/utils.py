@@ -1,5 +1,7 @@
+from typing import List
 import asyncio
 from datetime import datetime, timedelta
+import pickle
 
 from fastapi import HTTPException, status
 from jose import jwt
@@ -13,8 +15,6 @@ from . import (
     Base,
     Engine,
     pwd_context,
-    superusers,
-    users,
     logger
 )
 from .models import BlacklistedToken, User, ActiveSession
@@ -34,7 +34,7 @@ async def clean_up_expired_tokens():
         db.commit()
         db.close()
         logger.debug("Expired tokens cleaned up.")
-        await asyncio.sleep(TOKEN_EXPIRATION_TIME)
+        await asyncio.sleep(TOKEN_EXPIRATION_TIME * 60)
 
 
 def init_migration():
@@ -135,8 +135,21 @@ def create_superuser(
         password=password,
         is_superuser=True,
     )
-    superusers.append(superuser)
+    
+    def _load_superusers() -> List[UserCreate]:
+        try:
+            with open(".superuser", "rb") as f:
+                return pickle.load(f)
+        except FileNotFoundError:
+            return []
 
+    def _save_superusers(superusers: List[UserCreate]):
+        with open(".superuser", "wb") as f:
+            pickle.dump(superusers, f)
+            
+    superusers = _load_superusers()
+    superusers.append(superuser)
+    _save_superusers(superusers)
 
 
 def create_user(
@@ -155,5 +168,18 @@ def create_user(
         password=password,
         is_superuser=False,
     )
-    users.append(user)
 
+    def _load_users() -> List[UserCreate]:
+        try:
+            with open(".users", "rb") as f:
+                return pickle.load(f)
+        except FileNotFoundError:
+            return []
+        
+    def _save_users(users: List[UserCreate]):
+        with open(".users", "wb") as f:
+            pickle.dump(users, f)
+    
+    users = _load_users()
+    users.append(user)
+    _save_users(users)

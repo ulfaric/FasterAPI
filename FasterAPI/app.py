@@ -1,10 +1,12 @@
 import asyncio
+from math import log
+import pickle
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from contextlib import asynccontextmanager
-from . import config, meta_config, Base, Engine, users, superusers, AuthSession, logger
+from . import config, meta_config, Base, Engine, AuthSession, logger
 from .router import auth_router
 from .utils import clean_up_expired_tokens, register_user
 from .models import User
@@ -14,17 +16,26 @@ from .models import User
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=Engine)
     logger.debug("Database initialized.")
-    db = AuthSession()
-    for user in users:
-        existing_user = db.query(User).filter(User.username == user.username).first()
-        if not existing_user:
-            register_user(user, db)
-    for superuser in superusers:
-        existing_user = db.query(User).filter(User.username == superuser.username).first()
-        if not existing_user:
-            register_user(superuser, db)
-    db.close()
-    logger.debug("Users registered.")
+    with AuthSession() as db:
+        try:
+            with open(".superuser", "rb") as f:
+                superusers = pickle.load(f)
+                for superuser in superusers:
+                    register_user(superuser, db)
+            os.remove(".superuser")
+        except FileNotFoundError:
+            pass
+        
+        try:
+            with open(".users", "rb") as f:
+                users = pickle.load(f)
+                for user in users:
+                    register_user(user, db)
+            os.remove(".users")
+        except FileNotFoundError:
+            pass
+        db.close()
+    logger.debug("Superusers and users registered.")
     expired_token_cleaner = asyncio.create_task(clean_up_expired_tokens())
     yield
     expired_token_cleaner.cancel()
