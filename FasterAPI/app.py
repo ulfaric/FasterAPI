@@ -2,7 +2,7 @@ import asyncio
 from math import log
 import pickle
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from contextlib import asynccontextmanager
@@ -21,7 +21,10 @@ async def lifespan(app: FastAPI):
             with open(".superuser", "rb") as f:
                 superusers = pickle.load(f)
                 for superuser in superusers:
-                    register_user(superuser, db)
+                    try:
+                        register_user(superuser, db)
+                    except HTTPException:
+                        logger.debug(f"Superuser {superuser['username']} already exists.")
             os.remove(".superuser")
         except FileNotFoundError:
             pass
@@ -30,7 +33,10 @@ async def lifespan(app: FastAPI):
             with open(".users", "rb") as f:
                 users = pickle.load(f)
                 for user in users:
-                    register_user(user, db)
+                    try:
+                        register_user(user, db)
+                    except HTTPException:
+                        logger.debug(f"User {user['username']} already exists.")
             os.remove(".users")
         except FileNotFoundError:
             pass
