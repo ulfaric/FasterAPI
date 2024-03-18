@@ -5,7 +5,7 @@
 To do so, follow the below example:
 
 ```python
-from FasterAPI import Base
+from FasterAPI.models import Base
 
 class MyModel(Base):
     __tablename__ = "mymodels"

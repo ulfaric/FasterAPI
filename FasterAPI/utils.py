@@ -1,9 +1,8 @@
-from typing import List
-import asyncio
-from datetime import datetime, timedelta
 import pickle
+from datetime import datetime, timedelta
+from typing import List
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 from jose import jwt
 from sqlalchemy.orm import Session
 
@@ -11,35 +10,13 @@ from . import (
     ALGORITHM,
     SECRET_KEY,
     TOKEN_EXPIRATION_TIME,
-    AuthSession,
-    Base,
-    Engine,
+    get_db,
+    logger,
     pwd_context,
-    logger
+    status,
 )
-from .models import BlacklistedToken, User, ActiveSession
+from .models import ActiveSession, BlacklistedToken, User
 from .schemas import UserCreate
-
-if TOKEN_EXPIRATION_TIME is None:
-    raise Exception("TOKEN_EXPIRATION_TIME is not set.")
-
-
-async def clean_up_expired_tokens():
-    """A async task to cleanup expired tokens from the database. Maintains a optimal performance."""
-    while True:
-        db = AuthSession()
-        db.query(BlacklistedToken).filter(
-            BlacklistedToken.exp < datetime.now()
-        ).delete()
-        db.commit()
-        db.close()
-        logger.debug("Expired tokens cleaned up.")
-        await asyncio.sleep(TOKEN_EXPIRATION_TIME * 60)
-
-
-def init_migration():
-    """Initializes the database migration."""
-    Base.metadata.create_all(bind=Engine)
 
 
 def verify_password(plain_password, hashed_password):
@@ -55,10 +32,6 @@ async def authenticate_user(db: Session, username: str, password: str):
     if not verify_password(password, user.hashed_password):
         return False
     return user
-
-
-if SECRET_KEY is None:
-    raise Exception("SECRET_KEY is not set.")
 
 
 def create_access_token(data: dict):
@@ -97,8 +70,9 @@ def blacklist_token(token: str, db: Session):
     db.commit()
 
 
-def register_user(user: UserCreate, db: Session):
+def register_user(user: UserCreate):
     """Registers a new user."""
+    db = next(get_db())
     extsing_user = db.query(User).filter(User.username == user.username).first()
     if extsing_user:
         raise HTTPException(
@@ -135,7 +109,7 @@ def create_superuser(
         password=password,
         is_superuser=True,
     )
-    
+
     def _load_superusers() -> List[UserCreate]:
         try:
             with open(".superuser", "rb") as f:
@@ -146,7 +120,7 @@ def create_superuser(
     def _save_superusers(superusers: List[UserCreate]):
         with open(".superuser", "wb") as f:
             pickle.dump(superusers, f)
-            
+
     superusers = _load_superusers()
     superusers.append(superuser)
     _save_superusers(superusers)
@@ -175,11 +149,11 @@ def create_user(
                 return pickle.load(f)
         except FileNotFoundError:
             return []
-        
+
     def _save_users(users: List[UserCreate]):
         with open(".users", "wb") as f:
             pickle.dump(users, f)
-    
+
     users = _load_users()
     users.append(user)
     _save_users(users)

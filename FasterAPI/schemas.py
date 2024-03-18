@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr
 from typing import List
+
+from pydantic import BaseModel, EmailStr
 
 
 class Privilege(BaseModel):

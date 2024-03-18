@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Any, List
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import SecurityScopes

@@ -1,30 +1,30 @@
-from typing import Annotated
 import yaml
-from fastapi import APIRouter, Depends, HTTPException, Security, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.orm import Session
 
-from . import TOKEN_URL, get_db, oauth2_scheme, pwd_context
+from . import (
+    TOKEN_URL,
+    app,
+    get_db,
+    oauth2_scheme,
+    pwd_context,
+    ALLOW_SELF_REGISTRATION,
+)
 from .dependencies import authenticated, is_superuser
 from .models import User, UserPrivilege
 from .schemas import UserCreate, UserInfo, UserUpdate
 from .utils import (
-    create_session,
     authenticate_user,
     blacklist_token,
     create_access_token,
+    create_session,
     register_user,
 )
 
-with open("auth_config.yaml", "r") as f:
-    config = yaml.safe_load(f)
-    try:
-        ALLOW_SELF_REGISTRATION = config["ALLOW_SELF_REGISTRATION"]
-    except KeyError:
-        ALLOW_SELF_REGISTRATION = True
-
 auth_router = APIRouter()
+app.include_router(auth_router)
 
 
 @auth_router.post(f"/{TOKEN_URL}", tags=["Authentication"])
@@ -40,9 +40,7 @@ async def login_for_access_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
-    access_token = create_access_token(
-        data={"sub": user.username}
-    )
+    access_token = create_access_token(data={"sub": user.username})
     create_session(access_token, db, request.client.host)  # type: ignore
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -63,11 +61,9 @@ async def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_
 if ALLOW_SELF_REGISTRATION:
 
     @auth_router.post("/users/create", tags=["Users"])
-    async def register_user_self_signup(
-        new_user: UserCreate, db: Session = Depends(get_db)
-    ):
+    async def register_user_self_signup(new_user: UserCreate):
         """Register a new user"""
-        register_user(new_user, db)
+        register_user(new_user)
         return {"detail": "user successfully registered"}
 
 else:
@@ -75,11 +71,10 @@ else:
     @auth_router.post("/users/create", tags=["Users"])
     async def register_user_only_by_superuser(
         new_user: UserCreate,
-        db: Session = Depends(get_db),
-        user: User = Depends(is_superuser),
+        _: User = Depends(is_superuser),
     ):
         """Register a new user"""
-        register_user(new_user, db)
+        register_user(new_user)
         return {"detail": "user successfully registered"}
 
 

@@ -47,7 +47,7 @@ if __name__ == "__main__":
         email="admin@admin.com"
     )
     # start the fastapi app
-    uvicorn.run("FasterAPI.app:app", host="127.0.0.1", log_level="info", reload=True)
+    uvicorn.run("FasterAPI:app", host="127.0.0.1", log_level="info", reload=True)
 ```
 
 Finally, you could start the application by simply run the main.py.
