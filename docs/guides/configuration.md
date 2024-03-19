@@ -39,4 +39,8 @@ REDOC_URL: "/redoc"
 TERMS_OF_SERVICE: ""
 CONTACT: ""
 SUMMARY: "This is a summary of my API"
+JAEGER_SVC_NAME: "my-api" # service name
+JAEGER_TRACE: True # enable tracing
+JAEGER_HOST: "localhost" # Jaeger host
+JAEGER_PORT: "6831" # Jaeger host port
 ```

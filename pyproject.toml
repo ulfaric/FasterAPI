@@ -1,6 +1,6 @@
 [project]
 name = "FasterAPI"
-version = "0.0.29"
+version = "0.0.30"
 authors = [
   { name="Yifei Ren", email="ryf0510@live.com" },
 ]
@@ -21,6 +21,11 @@ dependencies = [
   "bcrypt==4.0.1",
   "passlib[bcrypt]",
   "psycopg2-binary",
+  "opentelemetry-sdk",
+  "opentelemetry-api",
+  "opentelemetry-instrumentation",
+  "opentelemetry-instrumentation-fastapi",
+  "opentelemetry-exporter-jaeger",
 ]
 
 [project.urls]

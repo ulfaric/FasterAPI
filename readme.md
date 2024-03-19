@@ -81,7 +81,7 @@ main.py
 auth_config.yaml
 ```
 
-## New! Now you can add meta data with "meta_config.yaml"
+## You can add meta data with "meta_config.yaml"
 
 For example, the following "meta_config.yaml" will change the title and version, as well as enable the debug.
 
@@ -99,3 +99,12 @@ SUMMARY: "This is a summary of my API"
 ```
 
 All the key words here is simply one to one mapping of FastAPI() constructor!
+
+## New! Now also built in with Opentelemetries for Tracing!, simple configure the following in meta_config.yaml
+
+```yaml
+JAEGER_SVC_NAME: "my-api" # service name
+JAEGER_TRACE: True # enable tracing
+JAEGER_HOST: "localhost" # Jaeger host
+JAEGER_PORT: "6831" # Jaeger host port
+```

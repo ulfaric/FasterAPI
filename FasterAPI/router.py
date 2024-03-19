@@ -1,30 +1,17 @@
-import yaml
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.orm import Session
 
-from . import (
-    TOKEN_URL,
-    app,
-    get_db,
-    oauth2_scheme,
-    pwd_context,
-    ALLOW_SELF_REGISTRATION,
-)
+from . import (ALLOW_SELF_REGISTRATION, TOKEN_URL, get_db, oauth2_scheme,
+               pwd_context)
 from .dependencies import authenticated, is_superuser
 from .models import User, UserPrivilege
 from .schemas import UserCreate, UserInfo, UserUpdate
-from .utils import (
-    authenticate_user,
-    blacklist_token,
-    create_access_token,
-    create_session,
-    register_user,
-)
+from .utils import (authenticate_user, blacklist_token, create_access_token,
+                    create_session, register_user)
 
 auth_router = APIRouter()
-app.include_router(auth_router)
 
 
 @auth_router.post(f"/{TOKEN_URL}", tags=["Authentication"])

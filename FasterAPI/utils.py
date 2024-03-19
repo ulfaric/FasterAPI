@@ -1,20 +1,14 @@
+import asyncio
 import pickle
 from datetime import datetime, timedelta
 from typing import List
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from jose import jwt
 from sqlalchemy.orm import Session
 
-from . import (
-    ALGORITHM,
-    SECRET_KEY,
-    TOKEN_EXPIRATION_TIME,
-    get_db,
-    logger,
-    pwd_context,
-    status,
-)
+from . import (ALGORITHM, SECRET_KEY, TOKEN_EXPIRATION_TIME, get_db, logger,
+               pwd_context)
 from .models import ActiveSession, BlacklistedToken, User
 from .schemas import UserCreate
 
@@ -157,3 +151,17 @@ def create_user(
     users = _load_users()
     users.append(user)
     _save_users(users)
+
+
+# define neccessary functions
+async def _clean_up_expired_tokens():
+    """A async task to cleanup expired tokens from the database. Maintains a optimal performance."""
+    while True:
+        db = next(get_db())
+        db.query(BlacklistedToken).filter(
+            BlacklistedToken.exp < datetime.now()
+        ).delete()
+        db.commit()
+        db.close()
+        logger.debug("Expired tokens cleaned up.")
+        await asyncio.sleep(TOKEN_EXPIRATION_TIME * 60)
