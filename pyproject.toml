@@ -1,36 +1,26 @@
-[project]
+[tool.poetry]
 name = "FasterAPI"
-version = "0.0.30"
-authors = [
-  { name="Yifei Ren", email="ryf0510@live.com" },
-]
-description = "Just a FasterAPI starting point with JWT user authentication."
+version = "0.0.31"
+description = ""
+authors = ["ulfaric <ryf0510@live.com>"]
 readme = "README.md"
-requires-python = ">=3.7"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
+urls = { github = "https://github.com/ulfaric/FasterAPI/issues", documentation = "https://ulfaric.github.io/FasterAPI/" }
 
-dependencies = [
-  "fastapi[all]",
-  "sqlalchemy",
-  "colorlog",
-  "python-jose[cryptography]",
-  "bcrypt==4.0.1",
-  "passlib[bcrypt]",
-  "psycopg2-binary",
-  "opentelemetry-sdk",
-  "opentelemetry-api",
-  "opentelemetry-instrumentation",
-  "opentelemetry-instrumentation-fastapi",
-  "opentelemetry-exporter-jaeger",
-]
+[tool.poetry.dependencies]
+python = "^3.7"
+fastapi = { extras = ["all"], version = "^0.110.0" }
+colorlog = "^6.8.2"
+sqlalchemy = "^2.0.28"
+python-jose = { extras = ["cryptography"], version = "^3.3.0" }
+bcrypt = "4.0.1"
+passlib = { extras = ["bcrypt"], version = "^1.7.4" }
+opentelemetry-sdk = "^1.23.0"
+opentelemetry-api = "^1.23.0"
+opentelemetry-instrumentation = "^0.44b0"
+opentelemetry-instrumentation-fastapi = "^0.44b0"
+opentelemetry-exporter-jaeger = "^1.21.0"
 
-[project.urls]
-"Homepage" = "https://ulfaric.github.io/FasterAPI/"
-"Bug Tracker" = "https://github.com/ulfaric/FasterAPI/issues"
 
-[tool.setuptools]
-packages = ["FasterAPI"]
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

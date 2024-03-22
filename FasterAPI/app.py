@@ -6,17 +6,18 @@ from typing import List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
-from . import Engine, config, get_db, logger, meta_config
-from .models import Base, User
-from .router import auth_router
-from .utils import _clean_up_expired_tokens, register_user
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+
+from . import Engine, config, get_db, logger, meta_config
+from .models import Base, User
+from .router import auth_router
+from .utils import _clean_up_expired_tokens, register_user
+
 
 # define lifespan
 @asynccontextmanager
@@ -79,8 +80,8 @@ app = FastAPI(
 )
 
 allow_origins = os.getenv("ALLOWED_ORIGINS", config.get("ALLOWED_ORIGINS", ["*"]))
-allow_credentials = os.getenv(
-    "ALLOW_CREDENTIALS", config.get("ALLOW_CREDENTIALS", True)
+allow_credentials = bool(
+    os.getenv("ALLOW_CREDENTIALS", config.get("ALLOW_CREDENTIALS", True))
 )
 allow_methods = os.getenv("ALLOW_METHODS", config.get("ALLOW_METHODS", ["*"]))
 allow_headers = os.getenv("ALLOW_HEADERS", config.get("ALLOW_HEADERS", ["*"]))
@@ -99,10 +100,14 @@ if meta_config.get("JAEGER_TRACE", False):
     jaeger_exporter = JaegerExporter(
         # configure the hostname and port of your Jaeger instance here
         agent_host_name=meta_config.get("JAEGER_HOST", "localhost"),
-        agent_port=meta_config.get("JAEGER_PORT", 6831)
+        agent_port=meta_config.get("JAEGER_PORT", 6831),
     )
 
-    trace_provider = TracerProvider(resource=Resource(attributes={"service.name": meta_config.get("JAEGER_SVC_NAME", "FasterAPI")}))
+    trace_provider = TracerProvider(
+        resource=Resource(
+            attributes={"service.name": meta_config.get("JAEGER_SVC_NAME", "FasterAPI")}
+        )
+    )
     trace_provider.add_span_processor(SimpleSpanProcessor(jaeger_exporter))
     trace.set_tracer_provider(tracer_provider=trace_provider)
     FastAPIInstrumentor().instrument_app(app)
