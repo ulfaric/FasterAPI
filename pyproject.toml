@@ -7,7 +7,7 @@ readme = "README.md"
 urls = { github = "https://github.com/ulfaric/FasterAPI/issues", documentation = "https://ulfaric.github.io/FasterAPI/" }
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 fastapi = { extras = ["all"], version = "^0.110.0" }
 colorlog = "^6.8.2"
 sqlalchemy = "^2.0.28"
@@ -19,6 +19,7 @@ opentelemetry-api = "^1.23.0"
 opentelemetry-instrumentation = "^0.44b0"
 opentelemetry-instrumentation-fastapi = "^0.44b0"
 opentelemetry-exporter-jaeger = "^1.21.0"
+typer = {extras = ["all"], version = "^0.10.0"}
 
 
 [build-system]

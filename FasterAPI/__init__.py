@@ -111,3 +111,5 @@ ALLOW_SELF_REGISTRATION = os.getenv(
 )
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=TOKEN_URL)
+
+PORT = os.getenv("PORT", meta_config.get("PORT", 8000))

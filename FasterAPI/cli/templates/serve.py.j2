@@ -1,0 +1,6 @@
+import uvicorn
+
+from FasterAPI import PORT
+
+if __name__ == "__main__":
+    uvicorn.run("FasterAPI.app:app", host="0.0.0.0")

@@ -1,4 +1,5 @@
 DEBUG: True
+PORT: 8000
 TITLE: "My API"
 DESCRIPTION: "This is a description of my API"
 VERSION: "0.0.2"
