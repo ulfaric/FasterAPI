@@ -1,13 +1,13 @@
-from typing import List
 from datetime import datetime
+from typing import List
+
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-Base = declarative_base()
+from FasterAPI import core
 
 
-class User(Base):
+class User(core.sql_base):
     """User model"""
 
     __tablename__ = "users"
@@ -26,7 +26,7 @@ class User(Base):
     )
 
 
-class UserPrivilege(Base):
+class UserPrivilege(core.sql_base):
     """User role model"""
 
     __tablename__ = "user_privileges"
@@ -36,7 +36,7 @@ class UserPrivilege(Base):
     user: Mapped["User"] = relationship("User", back_populates="privileges")
 
 
-class ActiveSession(Base):
+class ActiveSession(core.sql_base):
     """Active session model""" ""
 
     __tablename__ = "active_sessions"
@@ -49,7 +49,7 @@ class ActiveSession(Base):
     user: Mapped["User"] = relationship("User", back_populates="session")
 
 
-class BlacklistedToken(Base):
+class BlacklistedToken(core.sql_base):
     """Blacklisted token model""" ""
 
     __tablename__ = "blacklisted_tokens"

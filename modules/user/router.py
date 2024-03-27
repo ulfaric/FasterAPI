@@ -3,22 +3,23 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.orm import Session
 
-from . import (ALLOW_SELF_REGISTRATION, TOKEN_URL, get_db, oauth2_scheme,
+from . import (ALLOW_SELF_REGISTRATION, TOKEN_URL, user_module, oauth2_scheme,
                pwd_context)
 from .dependencies import authenticated, is_superuser
 from .models import User, UserPrivilege
 from .schemas import UserCreate, UserInfo, UserUpdate
 from .utils import (authenticate_user, blacklist_token, create_access_token,
                     create_session, register_user)
+from FasterAPI import core
 
 auth_router = APIRouter()
-
+core.app.include_router(auth_router)
 
 @auth_router.post(f"/{TOKEN_URL}", tags=["Authentication"])
 async def login_for_access_token(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db),
+    db: Session = Depends(user_module),
 ):
     """Authenticate a user and return a JWT access token"""
     user = await authenticate_user(db, form_data.username, form_data.password)
@@ -33,7 +34,7 @@ async def login_for_access_token(
 
 
 @auth_router.post(f"/logout", tags=["Authentication"], status_code=status.HTTP_200_OK)
-async def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+async def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(user_module)):
     """Logout a user and blacklisting their JWT access token"""
     try:
         blacklist_token(token, db)
@@ -66,7 +67,7 @@ else:
 
 
 @auth_router.get("/users/me", tags=["Users"], response_model=UserInfo)
-async def get_user(user: User = Depends(authenticated), db: Session = Depends(get_db)):
+async def get_user(user: User = Depends(authenticated), db: Session = Depends(user_module)):
     """Return the current user"""
     return user
 
@@ -79,7 +80,7 @@ if ALLOW_SELF_REGISTRATION:
     async def update_user(
         username: str,
         new_userinfo: UserUpdate,
-        db: Session = Depends(get_db),
+        db: Session = Depends(user_module),
         user: User = Depends(authenticated),
     ):
         """Update a user's information"""
@@ -105,7 +106,7 @@ else:
     async def update_user(
         username: str,
         new_userinfo: UserUpdate,
-        db: Session = Depends(get_db),
+        db: Session = Depends(user_module),
         user: User = Depends(is_superuser),
     ):
         """Update a user's information"""
@@ -126,7 +127,7 @@ else:
 
 @auth_router.post("/users/promote/{username}", tags=["Users"], response_model=UserInfo)
 async def promote_user(
-    username: str, db: Session = Depends(get_db), user: User = Depends(is_superuser)
+    username: str, db: Session = Depends(user_module), user: User = Depends(is_superuser)
 ):
     """Promote a user to superuser"""
     existing_user = db.query(User).filter(User.username == username).first()
@@ -142,7 +143,7 @@ async def promote_user(
 
 @auth_router.delete("/users/demote/{username}", tags=["Users"], response_model=UserInfo)
 async def demote_user(
-    username: str, db: Session = Depends(get_db), user: User = Depends(is_superuser)
+    username: str, db: Session = Depends(user_module), user: User = Depends(is_superuser)
 ):
     """Demote a user to normal user"""
     existing_user = db.query(User).filter(User.username == username).first()
@@ -160,7 +161,7 @@ async def demote_user(
 async def add_privilege(
     username: str,
     privilege: str,
-    db: Session = Depends(get_db),
+    db: Session = Depends(user_module),
     user: User = Depends(is_superuser),
 ):
     """Add a privilege to a user"""
@@ -180,7 +181,7 @@ async def add_privilege(
 async def remove_privilege(
     username: str,
     privilege: str,
-    db: Session = Depends(get_db),
+    db: Session = Depends(user_module),
     user: User = Depends(is_superuser),
 ):
     """Remove a privilege from a user"""
@@ -208,7 +209,7 @@ async def remove_privilege(
 
 @auth_router.delete("/users/delete/{username}", tags=["Users"], response_model=UserInfo)
 async def delete_user(
-    username: str, db: Session = Depends(get_db), user: User = Depends(is_superuser)
+    username: str, db: Session = Depends(user_module), user: User = Depends(is_superuser)
 ):
     """Delete a user"""
     existing_user = db.query(User).filter(User.username == username).first()
@@ -224,7 +225,7 @@ async def delete_user(
 
 @auth_router.get("/users/all", tags=["Users"], response_model=list[UserInfo])
 async def get_all_users(
-    db: Session = Depends(get_db), user: User = Depends(is_superuser)
+    db: Session = Depends(user_module), user: User = Depends(is_superuser)
 ):
     """Get all users"""
     return db.query(User).all()

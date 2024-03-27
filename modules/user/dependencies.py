@@ -6,7 +6,7 @@ from fastapi.security import SecurityScopes
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from . import ALGORITHM, ALLOW_MULTI_SESSIONS, SECRET_KEY, get_db, oauth2_scheme
+from . import ALGORITHM, ALLOW_MULTI_SESSIONS, SECRET_KEY, oauth2_scheme, user_module
 from .models import ActiveSession, BlacklistedToken, User
 
 
@@ -14,7 +14,7 @@ async def authenticated(
     request: Request,
     security_scopes: SecurityScopes,
     token: Annotated[str, Depends(oauth2_scheme)],
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[Session, Depends(user_module)],
 ):
     """A dependency function to authenticate the user."""
 

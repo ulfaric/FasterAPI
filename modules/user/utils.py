@@ -7,8 +7,9 @@ from fastapi import HTTPException, status
 from jose import jwt
 from sqlalchemy.orm import Session
 
-from . import (ALGORITHM, SECRET_KEY, TOKEN_EXPIRATION_TIME, get_db, logger,
-               pwd_context)
+from FasterAPI import logger
+
+from . import ALGORITHM, SECRET_KEY, TOKEN_EXPIRATION_TIME, user_module, pwd_context
 from .models import ActiveSession, BlacklistedToken, User
 from .schemas import UserCreate
 
@@ -66,7 +67,7 @@ def blacklist_token(token: str, db: Session):
 
 def register_user(user: UserCreate):
     """Registers a new user."""
-    db = next(get_db())
+    db = next(user_module())
     extsing_user = db.query(User).filter(User.username == user.username).first()
     if extsing_user:
         raise HTTPException(
@@ -157,11 +158,13 @@ def create_user(
 async def _clean_up_expired_tokens():
     """A async task to cleanup expired tokens from the database. Maintains a optimal performance."""
     while True:
-        db = next(get_db())
+        db = next(user_module())
         db.query(BlacklistedToken).filter(
             BlacklistedToken.exp < datetime.now()
         ).delete()
         db.commit()
         db.close()
         logger.debug("Expired tokens cleaned up.")
-        await asyncio.sleep(TOKEN_EXPIRATION_TIME * 60)
+        await asyncio.sleep(TOKEN_EXPIRATION_TIME * 5)
+
+user_module._lifespan = _clean_up_expired_tokens
