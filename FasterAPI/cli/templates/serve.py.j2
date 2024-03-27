@@ -1,7 +1,9 @@
 from FasterAPI import core
 from modules.user.router import user_router
 
-core.app.include_router(user_router)
+{% for module in modules%}
+core.app.include_router({{module}}_router)
+{% endfor %}
 
 if __name__ == "__main__":
     core.serve()

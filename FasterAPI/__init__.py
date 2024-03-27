@@ -73,7 +73,7 @@ class Module:
         return self._lifespan
 
 
-class ProjectConfiguration:
+class MetaData:
     modules: List[str] = list()
 
 
@@ -102,7 +102,7 @@ class Core:
             for lifespan in lifespans:
                 lifespan.cancel()
 
-        self._meta_data = ProjectConfiguration()
+        self._meta_data = MetaData()
         try:
             self._config = yaml.safe_load(open("config.yaml", "r"))
         except FileNotFoundError:

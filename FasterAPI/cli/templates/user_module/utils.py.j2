@@ -165,6 +165,6 @@ async def _clean_up_expired_tokens():
         db.commit()
         db.close()
         logger.debug("Expired tokens cleaned up.")
-        await asyncio.sleep(TOKEN_EXPIRATION_TIME * 5)
+        await asyncio.sleep(TOKEN_EXPIRATION_TIME * 60)
 
 user_module._lifespan = _clean_up_expired_tokens

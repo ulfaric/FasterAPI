@@ -12,7 +12,7 @@ user_module = Module()
 core.modules.append(user_module)
 
 config: Dict = yaml.safe_load(
-    open(os.path.join(os.path.dirname(__file__), "config.yaml"), "r")
+    open("config.yaml", "r")
 ) or {}
 
 SECRET_KEY = os.getenv("SECRET_KEY", config.get("SECRET_KEY", secrets.token_hex(32)))
