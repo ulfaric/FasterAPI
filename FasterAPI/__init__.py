@@ -2,9 +2,10 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Any, Callable, Coroutine, Dict, List
-import uvicorn
+from typing import Callable, Dict, List
+
 import colorlog
+import uvicorn
 import yaml
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,9 +42,7 @@ logger.setLevel(logging.DEBUG)
 class Module:
 
     def __init__(self) -> None:
-        config: Dict = yaml.safe_load(
-            open("config.yaml", "r")
-        )
+        config: Dict = yaml.safe_load(open("config.yaml", "r"))
         self._sql_url = os.getenv(
             "SQLALCHEMY_DATABASE_URL",
             config.get("SQLALCHEMY_DATABASE_URL", "sqlite:///dev.db"),
@@ -74,6 +73,10 @@ class Module:
         return self._lifespan
 
 
+class ProjectConfiguration:
+    modules: List[str] = list()
+
+
 class Core:
 
     _instance = None
@@ -99,7 +102,11 @@ class Core:
             for lifespan in lifespans:
                 lifespan.cancel()
 
-        self._config = yaml.safe_load(open("config.yaml", "r"))
+        self._meta_data = ProjectConfiguration()
+        try:
+            self._config = yaml.safe_load(open("config.yaml", "r"))
+        except FileNotFoundError:
+            self._config = dict()
         self._modules: List[Module] = list()
         self._sql_base = declarative_base()
         self._app = FastAPI(
@@ -162,12 +169,15 @@ class Core:
             trace.set_tracer_provider(tracer_provider=trace_provider)
             FastAPIInstrumentor().instrument_app(self.app)
 
-    def serve(self, port:int=8000, debug:bool=False):
-        if debug:
-            uvicorn.run(core.app, host="127.0.0.1", port=port, log_level="debug")
-        else:
-            uvicorn.run(core.app, host="0.0.0.0", port=port, log_level="info")
-        
+    def serve(self):
+        uvicorn.run(
+            core.app,
+            host="127.0.0.1",
+            port=int(os.getenv("PORT", self.config.get("PORT", 8000))),
+            log_level=os.getenv("LOG_LEVEL", self.config.get("LOG_LEVEL", "debug")),
+        )
+
+
     @property
     def config(self) -> Dict:
         return self._config
@@ -183,6 +193,10 @@ class Core:
     @property
     def sql_base(self):
         return self._sql_base
+
+    @property
+    def meta_data(self):
+        return self._meta_data
 
 
 core = Core()

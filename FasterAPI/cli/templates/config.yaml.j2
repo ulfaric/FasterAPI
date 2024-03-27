@@ -1,0 +1,55 @@
+DEBUG: True
+PORT: 8000
+
+# Default SQL database URL, module configuration will override this
+SQLALCHEMY_DATABASE_URL: 'sqlite:///dev.db'
+
+# JWT configuration
+## Secret key
+SECRET_KEY: {{ secret_key }}
+## Algorithm
+ALGORITHM: "HS256"
+## JWT Token url
+TOKEN_URL: "login"
+## JWT Token expiration time in minutes
+TOKEN_EXPIRATION_TIME: 15
+
+# Authentication configuration
+ALLOW_SELF_REGISTRATION: False
+
+# CORS configuration
+ALLOW_CREDENTIALS: False
+ALLOWED_ORIGINS:
+  - "*"
+ALLOWED_METHODS:
+  - "*"
+ALLOWED_HEADERS:
+  - "*"
+
+# Metadata configuration
+## API title
+TITLE: "My API"
+## API description
+DESCRIPTION: "This is a description of my API"
+## API version
+VERSION: "0.0.1"
+## OpenAPI json file URL
+OPENAPI_URL: "/openapi.json"
+## Swagger UI URL
+DOCS_URL: "/docs"
+## ReDoc URL
+REDOC_URL: "/redoc"
+## Terms of service
+TERMS_OF_SERVICE: ""
+## Contact information
+CONTACT: ""
+## Summary of the API
+SUMMARY: "This is a summary of my API"
+
+# Jaeger configuration
+## Enable jaeger tracing
+JAEGER_TRACE: True
+## Jaeger service name
+JAEGER_SVC_NAME: {{ project_name}}
+## Jaeger host
+JAEGER_HOST: "localhost"

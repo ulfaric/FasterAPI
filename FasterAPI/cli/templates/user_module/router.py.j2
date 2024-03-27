@@ -12,10 +12,10 @@ from .utils import (authenticate_user, blacklist_token, create_access_token,
                     create_session, register_user)
 from FasterAPI import core
 
-auth_router = APIRouter()
-core.app.include_router(auth_router)
+user_router = APIRouter()
+core.app.include_router(user_router)
 
-@auth_router.post(f"/{TOKEN_URL}", tags=["Authentication"])
+@user_router.post(f"/{TOKEN_URL}", tags=["Authentication"])
 async def login_for_access_token(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -33,7 +33,7 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@auth_router.post(f"/logout", tags=["Authentication"], status_code=status.HTTP_200_OK)
+@user_router.post(f"/logout", tags=["Authentication"], status_code=status.HTTP_200_OK)
 async def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(user_module)):
     """Logout a user and blacklisting their JWT access token"""
     try:
@@ -48,7 +48,7 @@ async def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(user
 
 if ALLOW_SELF_REGISTRATION:
 
-    @auth_router.post("/users/create", tags=["Users"])
+    @user_router.post("/users/create", tags=["Users"])
     async def register_user_self_signup(new_user: UserCreate):
         """Register a new user"""
         register_user(new_user)
@@ -56,7 +56,7 @@ if ALLOW_SELF_REGISTRATION:
 
 else:
 
-    @auth_router.post("/users/create", tags=["Users"])
+    @user_router.post("/users/create", tags=["Users"])
     async def register_user_only_by_superuser(
         new_user: UserCreate,
         _: User = Depends(is_superuser),
@@ -66,7 +66,7 @@ else:
         return {"detail": "user successfully registered"}
 
 
-@auth_router.get("/users/me", tags=["Users"], response_model=UserInfo)
+@user_router.get("/users/me", tags=["Users"], response_model=UserInfo)
 async def get_user(user: User = Depends(authenticated), db: Session = Depends(user_module)):
     """Return the current user"""
     return user
@@ -74,7 +74,7 @@ async def get_user(user: User = Depends(authenticated), db: Session = Depends(us
 
 if ALLOW_SELF_REGISTRATION:
 
-    @auth_router.patch(
+    @user_router.patch(
         "/users/update/{username}", tags=["Users"], response_model=UserInfo
     )
     async def update_user(
@@ -100,7 +100,7 @@ if ALLOW_SELF_REGISTRATION:
 
 else:
 
-    @auth_router.patch(
+    @user_router.patch(
         "/users/update/{username}", tags=["Users"], response_model=UserInfo
     )
     async def update_user(
@@ -125,7 +125,7 @@ else:
         return existing_user
 
 
-@auth_router.post("/users/promote/{username}", tags=["Users"], response_model=UserInfo)
+@user_router.post("/users/promote/{username}", tags=["Users"], response_model=UserInfo)
 async def promote_user(
     username: str, db: Session = Depends(user_module), user: User = Depends(is_superuser)
 ):
@@ -141,7 +141,7 @@ async def promote_user(
     return existing_user
 
 
-@auth_router.delete("/users/demote/{username}", tags=["Users"], response_model=UserInfo)
+@user_router.delete("/users/demote/{username}", tags=["Users"], response_model=UserInfo)
 async def demote_user(
     username: str, db: Session = Depends(user_module), user: User = Depends(is_superuser)
 ):
@@ -157,7 +157,7 @@ async def demote_user(
     return existing_user
 
 
-@auth_router.post("/users/privilege/add", tags=["Users"], response_model=UserInfo)
+@user_router.post("/users/privilege/add", tags=["Users"], response_model=UserInfo)
 async def add_privilege(
     username: str,
     privilege: str,
@@ -177,7 +177,7 @@ async def add_privilege(
     return existing_user
 
 
-@auth_router.post("/users/privilege/remove", tags=["Users"], response_model=UserInfo)
+@user_router.post("/users/privilege/remove", tags=["Users"], response_model=UserInfo)
 async def remove_privilege(
     username: str,
     privilege: str,
@@ -207,7 +207,7 @@ async def remove_privilege(
     return existing_user
 
 
-@auth_router.delete("/users/delete/{username}", tags=["Users"], response_model=UserInfo)
+@user_router.delete("/users/delete/{username}", tags=["Users"], response_model=UserInfo)
 async def delete_user(
     username: str, db: Session = Depends(user_module), user: User = Depends(is_superuser)
 ):
@@ -223,7 +223,7 @@ async def delete_user(
     return existing_user
 
 
-@auth_router.get("/users/all", tags=["Users"], response_model=list[UserInfo])
+@user_router.get("/users/all", tags=["Users"], response_model=list[UserInfo])
 async def get_all_users(
     db: Session = Depends(user_module), user: User = Depends(is_superuser)
 ):

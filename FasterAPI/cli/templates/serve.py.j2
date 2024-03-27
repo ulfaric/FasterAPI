@@ -1,6 +1,7 @@
-import uvicorn
+from FasterAPI import core
+from modules.user.router import user_router
 
-from FasterAPI import PORT
+core.app.include_router(user_router)
 
 if __name__ == "__main__":
-    uvicorn.run("FasterAPI.app:app", host="0.0.0.0")
+    core.serve()
