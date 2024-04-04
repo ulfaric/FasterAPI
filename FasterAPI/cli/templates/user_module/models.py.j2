@@ -4,10 +4,10 @@ from typing import List
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from FasterAPI import core
+from . import user_module
 
 
-class User(core.sql_base):
+class User(user_module.base):
     """User model"""
 
     __tablename__ = "users"
@@ -26,7 +26,7 @@ class User(core.sql_base):
     )
 
 
-class UserPrivilege(core.sql_base):
+class UserPrivilege(user_module.base):
     """User role model"""
 
     __tablename__ = "user_privileges"
@@ -36,7 +36,7 @@ class UserPrivilege(core.sql_base):
     user: Mapped["User"] = relationship("User", back_populates="privileges")
 
 
-class ActiveSession(core.sql_base):
+class ActiveSession(user_module.base):
     """Active session model""" ""
 
     __tablename__ = "active_sessions"
@@ -49,7 +49,7 @@ class ActiveSession(core.sql_base):
     user: Mapped["User"] = relationship("User", back_populates="session")
 
 
-class BlacklistedToken(core.sql_base):
+class BlacklistedToken(user_module.base):
     """Blacklisted token model""" ""
 
     __tablename__ = "blacklisted_tokens"

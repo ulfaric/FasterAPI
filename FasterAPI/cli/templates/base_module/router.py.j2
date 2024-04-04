@@ -1,0 +1,5 @@
+from fastapi import APIRouter
+from FasterAPI import core
+
+{{ module_name }}_router = APIRouter()
+core.app.include_router({{ module_name }}_router)

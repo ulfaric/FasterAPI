@@ -1,9 +1,13 @@
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime
+from typing import List
 
-Base = declarative_base()
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-class {{model_name}}(Base):
+from FasterAPI import core
+
+
+class {{model_name}}(core.sql_base):
     __tablename__ = '{{model_name}}'
     id:Mapped[Integer] = mapped_column(primary_key=True)
     {% for field in fields%}

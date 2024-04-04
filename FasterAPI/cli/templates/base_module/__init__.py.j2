@@ -1,0 +1,14 @@
+import os
+import secrets
+from typing import Dict
+
+import yaml
+
+from FasterAPI import Module, core
+
+{{ moudle_name }}_module = Module()
+core.modules.append({{ moudle_name }})
+
+config: Dict = yaml.safe_load(
+    open("config.yaml", "r")
+) or {}

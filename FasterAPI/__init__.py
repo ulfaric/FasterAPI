@@ -41,8 +41,8 @@ logger.setLevel(logging.DEBUG)
 
 class Module:
 
-    def __init__(self) -> None:
-        config: Dict = yaml.safe_load(open("config.yaml", "r"))
+    def __init__(self, config_file:str="config.yaml") -> None:
+        config: Dict = yaml.safe_load(open(config_file, "r"))
         self._sql_url = os.getenv(
             "SQLALCHEMY_DATABASE_URL",
             config.get("SQLALCHEMY_DATABASE_URL", "sqlite:///dev.db"),
@@ -51,6 +51,7 @@ class Module:
         self._session = sessionmaker(
             autocommit=False, autoflush=False, bind=self.engine
         )
+        self._base = declarative_base()
         self._lifespan: Callable = None  # type: ignore
 
     def __call__(self):
@@ -59,7 +60,7 @@ class Module:
             yield db
         finally:
             db.close()
-
+            
     @property
     def engine(self):
         return self._engine
@@ -67,13 +68,21 @@ class Module:
     @property
     def session(self):
         return self._session
+    
+    @property
+    def base(self):
+        return self._base
 
     @property
     def lifespan(self):
+
+        self.base.metadata.create_all(bind=self.engine)
         return self._lifespan
 
 
+
 class MetaData:
+    project_name: str
     modules: List[str] = list()
 
 
@@ -91,9 +100,6 @@ class Core:
         # define lifespan
         @asynccontextmanager
         async def _lifespan(app: FastAPI):
-            for module in self._modules:
-                self.sql_base.metadata.create_all(bind=module.engine)
-            logger.debug("Database initialized.")
             lifespans: List[asyncio.Task] = list()
             for module in self.modules:
                 if module.lifespan:
@@ -108,7 +114,6 @@ class Core:
         except FileNotFoundError:
             self._config = dict()
         self._modules: List[Module] = list()
-        self._sql_base = declarative_base()
         self._app = FastAPI(
             debug=bool(os.getenv("DEBUG", self.config.get("DEBUG", False))),
             title=os.getenv("TITLE", self.config.get("TITLE", "FasterAPI")),
@@ -189,10 +194,6 @@ class Core:
     @property
     def modules(self) -> List[Module]:
         return self._modules
-
-    @property
-    def sql_base(self):
-        return self._sql_base
 
     @property
     def meta_data(self):

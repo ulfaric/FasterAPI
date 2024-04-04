@@ -20,6 +20,7 @@ opentelemetry-instrumentation = "^0.44b0"
 opentelemetry-instrumentation-fastapi = "^0.44b0"
 opentelemetry-exporter-jaeger = "^1.21.0"
 typer = {extras = ["all"], version = "^0.10.0"}
+alembic = "^1.13.1"
 
 
 [build-system]
