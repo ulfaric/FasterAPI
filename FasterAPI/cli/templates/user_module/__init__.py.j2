@@ -11,9 +11,10 @@ from FasterAPI import Module, core
 user_module = Module()
 core.modules.append(user_module)
 
-config: Dict = yaml.safe_load(
-    open("config.yaml", "r")
-) or {}
+try:
+    config: Dict = yaml.safe_load(open("config.yaml", "r")) or {}
+except FileNotFoundError:
+    config = {}
 
 SECRET_KEY = os.getenv("SECRET_KEY", config.get("SECRET_KEY", secrets.token_hex(32)))
 ALGORITHM = os.getenv("ALGORITHM", config.get("ALGORITHM", "HS256"))

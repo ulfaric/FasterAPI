@@ -13,7 +13,6 @@ from .utils import (authenticate_user, blacklist_token, create_access_token,
 from FasterAPI import core
 
 user_router = APIRouter()
-core.app.include_router(user_router)
 
 @user_router.post(f"/{TOKEN_URL}", tags=["Authentication"])
 async def login_for_access_token(

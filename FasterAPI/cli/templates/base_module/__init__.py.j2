@@ -6,9 +6,10 @@ import yaml
 
 from FasterAPI import Module, core
 
-{{ moudle_name }}_module = Module()
-core.modules.append({{ moudle_name }})
+{{ module_name }}_module = Module()
+core.modules.append({{ module_name }}_module)
 
-config: Dict = yaml.safe_load(
-    open("config.yaml", "r")
-) or {}
+try:
+    config: Dict = yaml.safe_load(open("config.yaml", "r")) or {}
+except FileNotFoundError:
+    config = {}

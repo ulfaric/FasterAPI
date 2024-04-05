@@ -1,5 +1,7 @@
 from FasterAPI import core
-from modules.user.router import user_router
+{% for module in modules%}
+from modules.{{module}}.router import {{module}}_router
+{% endfor %}
 
 {% for module in modules%}
 core.app.include_router({{module}}_router)

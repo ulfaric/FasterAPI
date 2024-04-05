@@ -41,8 +41,11 @@ logger.setLevel(logging.DEBUG)
 
 class Module:
 
-    def __init__(self, config_file:str="config.yaml") -> None:
-        config: Dict = yaml.safe_load(open(config_file, "r"))
+    def __init__(self, config_file:str=os.path.dirname(__file__)+"/config.yaml") -> None:
+        try:
+            config: Dict = yaml.safe_load(open(config_file, "r")) or {}
+        except:
+            config = {}
         self._sql_url = os.getenv(
             "SQLALCHEMY_DATABASE_URL",
             config.get("SQLALCHEMY_DATABASE_URL", "sqlite:///dev.db"),
@@ -80,10 +83,10 @@ class Module:
         return self._lifespan
 
 
-
 class MetaData:
-    project_name: str
-    modules: List[str] = list()
+    def __init__(self) -> None:
+        self.project_name: str = ""
+        self.modules: List[str] = list()
 
 
 class Core:
@@ -110,9 +113,9 @@ class Core:
 
         self._meta_data = MetaData()
         try:
-            self._config = yaml.safe_load(open("config.yaml", "r"))
-        except FileNotFoundError:
-            self._config = dict()
+            self._config = yaml.safe_load(open("config.yaml", "r")) or {}
+        except:
+            self._config = {}
         self._modules: List[Module] = list()
         self._app = FastAPI(
             debug=bool(os.getenv("DEBUG", self.config.get("DEBUG", False))),

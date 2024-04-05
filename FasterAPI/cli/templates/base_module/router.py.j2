@@ -1,5 +1,28 @@
 from fastapi import APIRouter
+
 from FasterAPI import core
 
+from .schema import {{ model_name }}Create, {{ model_name }}Delete, {{ model_name }}Read, {{ model_name }}Update
+from .utils import create_{{ module_name }}, delete_{{ module_name }}, read_{{ module_name }}, update_{{ module_name }}
+
 {{ module_name }}_router = APIRouter()
-core.app.include_router({{ module_name }}_router)
+
+@{{ module_name }}_router.post("/{{ module_name }}/create")
+async def create(data: {{ model_name }}Create):
+    create_{{ module_name }}(data)
+
+
+@{{ module_name }}_router.get("/{{ module_name }}/read")
+async def read(data: {{ model_name }}Read):
+    read_{{ module_name }}(data)
+
+
+@{{ module_name }}_router.put("/{{ module_name }}/update")
+async def update(data: {{ model_name }}Update):
+    update_{{ module_name }}(data)
+
+
+@{{ module_name }}_router.delete("/{{ module_name }}/delete")
+async def delete(data: {{ model_name }}Delete):
+    delete_{{ module_name }}(data)
+
