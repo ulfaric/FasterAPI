@@ -1,7 +1,9 @@
 import os
 import pickle
 import secrets
+import subprocess
 
+import alembic
 import jinja2
 import typer
 
@@ -95,7 +97,40 @@ def create(project_name: str):
         user_module_utils_py = user_module_utils_py_template.render()
         with open(f"{project_name}/modules/user/utils.py", "w") as output_file:
             output_file.write(user_module_utils_py)
-
+        progress.update(10)
+        
+        # typer.echo("Initialize alembic...")
+        # os.chdir(f"{project_name}/modules/")
+        # subprocess.run(["alembic", "init", "user_alembic"])
+        # progress.update(10)
+        
+        # typer.echo("Populate alembic env.py...")
+        # alembic_ini_path = f"alembic.ini"
+        # with open(alembic_ini_path, 'r') as file:
+        #     config_contents = file.read()      
+        # config_contents = config_contents.replace('sqlalchemy.url = driver://user:pass@localhost/dbname',
+        #                                         f'sqlalchemy.url ={core.config.get("SQLALCHEMY_DATABASE_URL", "sqlite:///dev.db")}')
+        # with open(alembic_ini_path, 'w') as file:
+        #     file.write(config_contents)
+        # progress.update(10)
+        
+        # typer.echo("Populate alembic env.py...")
+        # alembic_env_path = f"user_alembic/env.py"
+        # with open(alembic_env_path, 'r') as file:
+        #     env_contents = file.read()
+        # env_contents = env_contents.replace('target_metadata = None',
+        #                                     'from user import user_module\ntarget_metadata = user_module.base.metadata')
+        # with open(alembic_env_path, 'w') as file:
+        #     file.write(env_contents)
+        # progress.update(10)
+        
+        # typer.echo("Populate alembic script...")
+        # subprocess.run(["alembic", "revision", "--autogenerate", "-m", "Initial"])
+        # progress.update(10)
+        
+        # typer.echo("Populate alembic upgrade...")
+        # subprocess.run(["alembic", "upgrade", "head"])
+        # progress.update(10)
 
 @project_cli.command()
 def update():
