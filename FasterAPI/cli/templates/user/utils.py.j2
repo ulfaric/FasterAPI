@@ -1,4 +1,5 @@
 import asyncio
+import os
 import pickle
 from datetime import datetime, timedelta
 from typing import List
@@ -165,6 +166,33 @@ def create_user(
 # define neccessary functions
 async def _clean_up_expired_tokens():
     """A async task to cleanup expired tokens from the database. Maintains a optimal performance."""
+
+    db = next(user_module())
+    try:
+        with open(".superuser", "rb") as f:
+            superusers: List[User] = pickle.load(f)
+            for superuser in superusers:
+                try:
+                    register_user(superuser)
+                except HTTPException:
+                    logger.debug(f"Superuser {superuser.username} already exists.")
+        os.remove(".superuser")
+    except FileNotFoundError:
+        pass
+
+    try:
+        with open(".users", "rb") as f:
+            users: List[User] = pickle.load(f)
+            for user in users:
+                try:
+                    register_user(user)
+                except HTTPException:
+                    logger.debug(f"User {user.username} already exists.")
+        os.remove(".users")
+    except FileNotFoundError:
+        pass
+
+    logger.debug("Superusers and users registered.")
     while True:
         db = next(user_module())
         db.query(BlacklistedToken).filter(
