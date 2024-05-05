@@ -46,10 +46,8 @@ class Module:
         self._module_name = module_name
         try:
             config_file = os.path.dirname(os.path.abspath(sys.argv[0])) + f"/{module_name}/config.yaml"
-            logger.info(f"Loading module config from {config_file}...")
             config: Dict = yaml.safe_load(open(config_file, "r"))
         except FileNotFoundError:
-            logger.warning("No moudle config.yaml file found. Using default config.")
             config = {}
         self._sql_url = os.getenv(
             "SQLALCHEMY_DATABASE_URL",

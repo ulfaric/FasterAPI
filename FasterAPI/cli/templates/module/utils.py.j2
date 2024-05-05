@@ -2,7 +2,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from . import {{ module_name }}_module
-from .model import {{ model_name }}
+from . import {{ model_name }}
 from .schema import {{ model_name }}Create, {{ model_name }}Delete, {{ model_name }}Read, {{ model_name }}Update
 
 

@@ -1,0 +1,26 @@
+import os
+import secrets
+from typing import Dict, List
+
+import yaml
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from FasterAPI import Module, core
+
+{{ module_name }}_module = Module(module_name="{{ module_name }}")
+core.modules.append({{ module_name }}_module)
+
+try:
+    config: Dict = yaml.safe_load(open("config.yaml", "r")) or {}
+except FileNotFoundError:
+    config = {}
+
+class {{ model_name }}({{ module_name }}_module.base):
+    """{{ model_name }} model"""
+
+    __tablename__ = "{{ model_name.lower() }}s"
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    {% for field in fields %}
+    {{ field.name }}: Mapped[{{ field.type }}]
+    {% endfor %}
