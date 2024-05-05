@@ -5,3 +5,11 @@ As the name suggested, this is a open source project that aims to make [FastAPI]
 Please feel free to use it as the baseline for your next project!
 
 We have been using it as a quick startup for our projects at [Innovation Centre Perth](https://www.icentralau.com.au/perth/). Welcome all visitors!
+
+## Installation
+
+```bash
+pip install FasterAPI==0.0.31
+```
+
+`Note:` Latest version is changing to a CLI toolkit which is still under development.
