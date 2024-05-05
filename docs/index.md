@@ -9,7 +9,7 @@ We have been using it as a quick startup for our projects at [Innovation Centre 
 ## Installation
 
 ```bash
-pip install FasterAPI==0.0.31
+pip install FasterAPI==0.0.32
 ```
 
 `Note:` Latest version is changing to a CLI toolkit which is still under development.

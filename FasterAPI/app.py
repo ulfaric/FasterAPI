@@ -1,4 +1,5 @@
 import asyncio
+from math import inf
 import os
 import pickle
 from contextlib import asynccontextmanager
@@ -17,6 +18,9 @@ from . import Engine, config, get_db, logger, meta_config
 from .models import Base, User
 from .router import auth_router
 from .utils import _clean_up_expired_tokens, register_user
+
+import Akatosh
+from Akatosh.universe import Mundus
 
 
 # define lifespan
@@ -50,8 +54,12 @@ async def _lifespan(app: FastAPI):
         pass
     logger.debug("Superusers and users registered.")
     expired_token_cleaner = asyncio.create_task(_clean_up_expired_tokens())
+    Mundus.enable_realtime()
+    Akatosh.logger.setLevel("INFO")
+    akatosh = asyncio.create_task(Mundus.simulate(inf))
     yield
     expired_token_cleaner.cancel()
+    akatosh.cancel()
 
 
 # define app
