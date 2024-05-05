@@ -4,19 +4,6 @@ PORT: 8000
 # Default SQL database URL, module configuration will override this
 SQLALCHEMY_DATABASE_URL: 'sqlite:///dev.db'
 
-# JWT configuration
-## Secret key
-SECRET_KEY: {{ secret_key }}
-## Algorithm
-ALGORITHM: "HS256"
-## JWT Token url
-TOKEN_URL: "login"
-## JWT Token expiration time in minutes
-TOKEN_EXPIRATION_TIME: 15
-
-# Authentication configuration
-ALLOW_SELF_REGISTRATION: False
-
 # CORS configuration
 ALLOW_CREDENTIALS: False
 ALLOWED_ORIGINS:

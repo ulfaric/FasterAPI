@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 from contextlib import asynccontextmanager
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
 import colorlog
 import uvicorn
@@ -42,17 +42,18 @@ logger.setLevel(logging.DEBUG)
 
 class Module:
 
-    def __init__(self, module_name:str) -> None:
+    def __init__(self, module_name: str, config_file: Optional[str]=None) -> None:
         self._module_name = module_name
         try:
-            config_file = os.path.dirname(os.path.abspath(sys.argv[0])) + f"/{module_name}/config.yaml"
+            if config_file is None:
+                config_file = (
+                    os.path.dirname(os.path.abspath(sys.argv[0]))
+                    + f"/{module_name}/config.yaml"
+                )
             config: Dict = yaml.safe_load(open(config_file, "r"))
         except FileNotFoundError:
             config = {}
-        self._sql_url = os.getenv(
-            "SQLALCHEMY_DATABASE_URL",
-            config.get("SQLALCHEMY_DATABASE_URL", "sqlite:///dev.db"),
-        )
+        self._sql_url = config.get("SQLALCHEMY_DATABASE_URL", core.config.get("SQLALCHEMY_DATABASE_URL", "sqlite:///test.db"))
         self._engine = create_engine(self._sql_url)
         self._session = sessionmaker(
             autocommit=False, autoflush=False, bind=self.engine
@@ -81,8 +82,6 @@ class Module:
 
     @property
     def lifespan(self):
-
-        self.base.metadata.create_all(bind=self.engine)
         return self._lifespan
 
 
@@ -116,7 +115,9 @@ class Core:
 
         self._meta_data = MetaData()
         try:
-            config_file = config_file = os.path.dirname(os.path.abspath(sys.argv[0])) + "/config.yaml"
+            config_file = config_file = (
+                os.path.dirname(os.path.abspath(sys.argv[0])) + "/config.yaml"
+            )
             self._config = yaml.safe_load(open(config_file, "r"))
         except FileNotFoundError:
             self._config = {}

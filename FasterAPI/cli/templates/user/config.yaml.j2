@@ -1,5 +1,15 @@
 # Module databse URL, will override the project database URL
-SQLALCHEMY_DATABASE_URL: 'sqlite:///dev.db'
+SQLALCHEMY_DATABASE_URL: 'sqlite:///{{project_name}}/{{module_name}}/{{module_name}}.db'
 
 # Authentication configuration
 ALLOW_SELF_REGISTRATION: False
+
+# JWT configuration
+## Secret key
+SECRET_KEY: {{ secret_key }}
+## Algorithm
+ALGORITHM: "HS256"
+## JWT Token url
+TOKEN_URL: "login"
+## JWT Token expiration time in minutes
+TOKEN_EXPIRATION_TIME: 15

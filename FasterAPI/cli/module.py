@@ -5,7 +5,7 @@ import jinja2
 import typer
 import shutil
 
-from .. import core
+from .. import Module, core
 
 template_loader = jinja2.FileSystemLoader(
     searchpath=os.path.join(os.path.dirname(__file__), "templates"), followlinks=True
@@ -74,10 +74,10 @@ def create(name: str):
     )
     with open(f"{name}/module/utils.py", "w") as output_file:
         output_file.write(module_utils_py)
-        
+
     # create config.yaml
     config_yaml_template = templates.get_template("config.yaml.j2")
-    config_yaml = config_yaml_template.render()
+    config_yaml = config_yaml_template.render(module_name=name)
     with open(f"{name}/config.yaml", "w") as output_file:
         output_file.write(config_yaml)
 
@@ -97,24 +97,31 @@ def create(name: str):
 
     # initialize alembic
     os.chdir(name)
+    module = Module(name, config_file="config.yaml")
     os.system("alembic init alembic")
     # Update alembic.ini
     with open("alembic.ini", "r") as file:
         alembic_ini_content = file.read()
 
-    alembic_ini_content = alembic_ini_content.replace(
-        "sqlalchemy.url = driver://user:pass@localhost/dbname",
-        f"sqlalchemy.url = sqlite:///{name}.db",
-    )
+    if "sqlite" in module._sql_url:
+        alembic_ini_content = alembic_ini_content.replace(
+            "sqlalchemy.url = driver://user:pass@localhost/dbname",
+            f"sqlalchemy.url = sqlite:///{name}.db",
+        )
+    else:
+        alembic_ini_content = alembic_ini_content.replace(
+            "sqlalchemy.url = driver://user:pass@localhost/dbname",
+            f"sqlalchemy.url = {module._sql_url}",
+        )
 
     with open("alembic.ini", "w") as file:
         file.write(alembic_ini_content)
 
 
 @module_cli.command()
-def migrate(module_name: str, message: str="Initial migration"):
+def migrate(module_name: str, message: str = "Initial migration"):
     """Migratie models of the module by alembic."""
-    
+
     module_name = module_name.lower()
 
     try:
@@ -137,14 +144,15 @@ def migrate(module_name: str, message: str="Initial migration"):
     os.remove("alembic/env.py")
     with open("alembic/env.py", "w") as file:
         file.write(alembic_env_py_content)
-        
+
     os.system(f"alembic revision -m {message} --autogenerate")
     os.system("alembic upgrade head")
+
 
 @module_cli.command()
 def remove(name: str):
     """remove a module."""
-    
+
     try:
         core._meta_data = pickle.loads(open(".meta", "rb").read())
     except FileNotFoundError:
@@ -179,11 +187,12 @@ def remove(name: str):
         output_file.write(serve_py)
 
     typer.echo(f"Module {name} removed.")
-    
+
+
 @module_cli.command()
 def restore(name: str):
     """restore a module."""
-    
+
     try:
         core._meta_data = pickle.loads(open(".meta", "rb").read())
     except FileNotFoundError:
