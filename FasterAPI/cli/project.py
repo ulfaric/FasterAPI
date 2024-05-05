@@ -1,9 +1,7 @@
 import os
 import pickle
 import secrets
-import subprocess
 
-import alembic
 import jinja2
 import typer
 
