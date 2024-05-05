@@ -9,8 +9,16 @@ from sqlalchemy.orm import Session
 
 from FasterAPI import logger
 
-from . import ALGORITHM, SECRET_KEY, TOKEN_EXPIRATION_TIME, user_module, pwd_context
-from .models import ActiveSession, BlacklistedToken, User
+from . import (
+    ALGORITHM,
+    SECRET_KEY,
+    TOKEN_EXPIRATION_TIME,
+    ActiveSession,
+    BlacklistedToken,
+    User,
+    pwd_context,
+    user_module,
+)
 from .schemas import UserCreate
 
 

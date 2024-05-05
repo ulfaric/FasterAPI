@@ -1,6 +1,6 @@
 from FasterAPI import core
 {% for module in modules%}
-from modules.{{module}}.router import {{module}}_router
+from {{module}}.module.router import {{module}}_router
 {% endfor %}
 
 {% for module in modules%}

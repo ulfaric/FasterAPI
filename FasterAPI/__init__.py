@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import sys
 from contextlib import asynccontextmanager
 from typing import Callable, Dict, List
 
@@ -41,10 +42,14 @@ logger.setLevel(logging.DEBUG)
 
 class Module:
 
-    def __init__(self, config_file:str=os.path.dirname(__file__)+"/config.yaml") -> None:
+    def __init__(self, module_name:str) -> None:
+        self._module_name = module_name
         try:
-            config: Dict = yaml.safe_load(open(config_file, "r")) or {}
-        except:
+            config_file = os.path.dirname(os.path.abspath(sys.argv[0])) + f"/{module_name}/config.yaml"
+            logger.info(f"Loading module config from {config_file}...")
+            config: Dict = yaml.safe_load(open(config_file, "r"))
+        except FileNotFoundError:
+            logger.warning("No moudle config.yaml file found. Using default config.")
             config = {}
         self._sql_url = os.getenv(
             "SQLALCHEMY_DATABASE_URL",
@@ -63,7 +68,7 @@ class Module:
             yield db
         finally:
             db.close()
-            
+
     @property
     def engine(self):
         return self._engine
@@ -71,7 +76,7 @@ class Module:
     @property
     def session(self):
         return self._session
-    
+
     @property
     def base(self):
         return self._base
@@ -113,8 +118,9 @@ class Core:
 
         self._meta_data = MetaData()
         try:
-            self._config = yaml.safe_load(open("config.yaml", "r")) or {}
-        except:
+            config_file = config_file = os.path.dirname(os.path.abspath(sys.argv[0])) + "/config.yaml"
+            self._config = yaml.safe_load(open(config_file, "r"))
+        except FileNotFoundError:
             self._config = {}
         self._modules: List[Module] = list()
         self._app = FastAPI(
@@ -184,7 +190,6 @@ class Core:
             port=int(os.getenv("PORT", self.config.get("PORT", 8000))),
             log_level=os.getenv("LOG_LEVEL", self.config.get("LOG_LEVEL", "debug")),
         )
-
 
     @property
     def config(self) -> Dict:

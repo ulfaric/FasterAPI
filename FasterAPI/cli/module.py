@@ -4,7 +4,7 @@ import pickle
 import jinja2
 import typer
 
-from .. import Module, core
+from .. import core
 
 template_loader = jinja2.FileSystemLoader(
     searchpath=os.path.join(os.path.dirname(__file__), "templates"), followlinks=True
@@ -106,11 +106,3 @@ def migrate(name: str):
         raise typer.Abort(
             "Project meta file not found. Run `fasterapi create` to create a project."
         )
-
-    # initialize module
-    try:
-        module = Module(
-            config_file=f"modules/{name}/config.yml"
-        )
-    except FileNotFoundError:
-        raise typer.Abort(f"Module {name} config file not found.")

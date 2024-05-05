@@ -6,8 +6,16 @@ from fastapi.security import SecurityScopes
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from . import ALGORITHM, ALLOW_MULTI_SESSIONS, SECRET_KEY, oauth2_scheme, user_module
-from .models import ActiveSession, BlacklistedToken, User
+from . import (
+    ALGORITHM,
+    ALLOW_MULTI_SESSIONS,
+    SECRET_KEY,
+    ActiveSession,
+    BlacklistedToken,
+    User,
+    oauth2_scheme,
+    user_module,
+)
 
 
 async def authenticated(

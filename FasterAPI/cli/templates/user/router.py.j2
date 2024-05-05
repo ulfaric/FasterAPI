@@ -3,14 +3,26 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.orm import Session
 
-from . import (ALLOW_SELF_REGISTRATION, TOKEN_URL, user_module, oauth2_scheme,
-               pwd_context)
-from .dependencies import authenticated, is_superuser
-from .models import User, UserPrivilege
-from .schemas import UserCreate, UserInfo, UserUpdate
-from .utils import (authenticate_user, blacklist_token, create_access_token,
-                    create_session, register_user)
 from FasterAPI import core
+
+from . import (
+    ALLOW_SELF_REGISTRATION,
+    TOKEN_URL,
+    User,
+    UserPrivilege,
+    oauth2_scheme,
+    pwd_context,
+    user_module,
+)
+from .dependencies import authenticated, is_superuser
+from .schemas import UserCreate, UserInfo, UserUpdate
+from .utils import (
+    authenticate_user,
+    blacklist_token,
+    create_access_token,
+    create_session,
+    register_user,
+)
 
 user_router = APIRouter()
 
