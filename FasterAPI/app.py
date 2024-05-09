@@ -16,7 +16,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 
 from . import Engine, config, get_db, logger, meta_config
 from .models import Base, User
-from .router import auth_router
+from .router import user_router, auth_router
 from .utils import _clean_up_expired_tokens, register_user
 
 import Akatosh
@@ -102,7 +102,8 @@ app.add_middleware(
     allow_headers=allow_headers,
 )
 
-app.include_router(auth_router, tags=["Authentication"])
+app.include_router(auth_router)
+app.include_router(user_router)
 
 if meta_config.get("JAEGER_TRACE", False):
     jaeger_exporter = JaegerExporter(
