@@ -287,10 +287,10 @@ def generate_key_and_csr(
 
 def sign_certificate(
     csr: CertificateSigningRequest,
-    issuer_key: Optional[rsa.RSAPrivateKey],
-    issuer_key_path: Optional[str],
-    issuer_cert: Optional[Certificate],
-    issuer_cert_path: Optional[str],
+    issuer_key: Optional[rsa.RSAPrivateKey] = None,
+    issuer_key_path: Optional[str] = None,
+    issuer_cert: Optional[Certificate] = None,
+    issuer_cert_path: Optional[str] = None,
     validity_days=365,
     directory: Optional[str] = None,
 ) -> Certificate:
@@ -306,12 +306,18 @@ def sign_certificate(
         directory (Optional[str], optional): the directory to save the files. Defaults to None.
 
     Raises:
-        ValueError: raise if both issuer_key and issuer_key_path are provided or both ot provided.
-        ValueError: raise if both issuer_cert and issuer_cert_path are provided or both ot provided.
+        IssuerKeyNotDefined: raise if both issuer_key and issuer_key_path are provided or both ot provided.
+        IssuerCertNotDefined: raise if both issuer_cert and issuer_cert_path are provided or both ot provided.
 
     Returns:
         Certificate: returns the signed certificate.
     """
+    
+    class IssuerKeyNotDefined(Exception):
+        pass
+    
+    class IssuerCertNotDefined(Exception):
+        pass
 
     if issuer_key and issuer_key_path is None:
         _issuer_key = issuer_key
@@ -321,7 +327,7 @@ def sign_certificate(
                 key_file.read(), password=None, backend=default_backend()
             )
     else:
-        raise ValueError("Either issuer_key or issuer_key_path must be provided.")
+        raise IssuerKeyNotDefined("Either issuer_key or issuer_key_path must be provided.")
 
     if issuer_cert and issuer_cert_path is None:
         _issuer_cert = issuer_cert
@@ -331,7 +337,7 @@ def sign_certificate(
                 cert_file.read(), default_backend()
             )
     else:
-        raise ValueError("Either issuer_cert or issuer_cert_path must be provided.")
+        raise IssuerCertNotDefined("Either issuer_cert or issuer_cert_path must be provided.")
 
     cert = (
         x509.CertificateBuilder()
