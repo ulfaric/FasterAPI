@@ -1,14 +1,19 @@
 import asyncio
 import pickle
-from datetime import datetime, timedelta
-from typing import List
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional, Tuple
 
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509 import Certificate, CertificateSigningRequest
+from cryptography.x509.oid import NameOID
 from fastapi import HTTPException, status
 from jose import jwt
 from sqlalchemy.orm import Session
 
-from . import (ALGORITHM, SECRET_KEY, TOKEN_EXPIRATION_TIME, get_db, logger,
-               pwd_context)
+from . import ALGORITHM, SECRET_KEY, TOKEN_EXPIRATION_TIME, get_db, logger, pwd_context
 from .models import ActiveSession, BlacklistedToken, User
 from .schemas import UserCreate
 
@@ -165,3 +170,131 @@ async def _clean_up_expired_tokens():
         db.close()
         logger.debug("Expired tokens cleaned up.")
         await asyncio.sleep(TOKEN_EXPIRATION_TIME * 60)
+
+
+def generate_root_ca(
+    expiration_days: int = 3650,
+    common_name: str = "Root CA",
+    subject_alternative_names: Optional[List[str]] = None,
+    directory: Optional[str] = None,
+) -> Tuple[rsa.RSAPrivateKey, Certificate]:
+    """Create a custom root CA certificate and private key."""
+
+    key = rsa.generate_private_key(
+        public_exponent=65537, key_size=2048, backend=default_backend()
+    )
+
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COMMON_NAME, common_name),
+        ]
+    )
+
+    builder = x509.CertificateBuilder()
+    builder = builder.subject_name(subject)
+    builder = builder.issuer_name(issuer)
+    builder = builder.public_key(key.public_key())
+    builder = builder.serial_number(x509.random_serial_number())
+    builder = builder.not_valid_before(datetime.now(timezone.utc))
+    builder = builder.not_valid_after(
+        datetime.now(timezone.utc) + timedelta(days=expiration_days)
+    )
+    builder = builder.add_extension(
+        x509.BasicConstraints(ca=True, path_length=None),
+        critical=True,
+    )
+    if subject_alternative_names:
+        san_dns_names = x509.SubjectAlternativeName(
+            [x509.DNSName(name) for name in subject_alternative_names]
+        )
+        builder = builder.add_extension(san_dns_names, critical=False)
+    cert = builder.sign(key, hashes.SHA256(), default_backend())
+
+    if directory:
+        with open(f"{directory}/root-key.pem", "wb") as f:
+            f.write(
+                key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                )
+            )
+        with open(f"{directory}/root-cert.pem", "wb") as f:
+            f.write(cert.public_bytes(encoding=serialization.Encoding.PEM))
+
+    return key, cert
+
+
+def generate_key_and_csr(
+    common_name: str, san_dns_names: List[str], directory: Optional[str] = None
+):
+    """Generate a server private key and a certificate signing request."""
+    key = rsa.generate_private_key(
+        public_exponent=65537, key_size=2048, backend=default_backend()
+    )
+
+    subject = x509.Name(
+        [
+            x509.NameAttribute(NameOID.COMMON_NAME, common_name),
+        ]
+    )
+
+    if san_dns_names:
+        extensions = x509.SubjectAlternativeName(
+            [x509.DNSName(name) for name in san_dns_names]
+        )
+
+    csr = (
+        x509.CertificateSigningRequestBuilder()
+        .subject_name(subject)
+        .add_extension(extensions, critical=False)
+        .sign(key, hashes.SHA256(), default_backend())
+    )
+
+    if directory:
+        with open(f"{directory}/server-key.pem", "wb") as f:
+            f.write(
+                key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                )
+            )
+        with open(f"{directory}/server-csr.pem", "wb") as f:
+            f.write(csr.public_bytes(encoding=serialization.Encoding.PEM))
+
+    return key, csr
+
+
+def sign_certificate(
+    csr: CertificateSigningRequest,
+    issuer_key: rsa.RSAPrivateKey,
+    issuer_cert: Certificate,
+    validity_days=365,
+    directory: Optional[str] = None,
+):
+    """Sign a certificate with the root CA."""
+
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(csr.subject)
+        .issuer_name(issuer_cert.subject)
+        .public_key(csr.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime.now(timezone.utc))
+        .not_valid_after(datetime.now(timezone.utc) + timedelta(days=validity_days))
+        .add_extension(
+            x509.BasicConstraints(ca=False, path_length=None),
+            critical=True,
+        )
+        .add_extension(
+            csr.extensions.get_extension_for_class(x509.SubjectAlternativeName).value,
+            critical=False,
+        )
+        .sign(issuer_key, hashes.SHA256(), default_backend())
+    )
+
+    if directory:
+        with open(f"{directory}/server-cert.pem", "wb") as f:
+            f.write(cert.public_bytes(encoding=serialization.Encoding.PEM))
+    return cert
