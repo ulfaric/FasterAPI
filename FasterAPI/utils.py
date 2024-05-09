@@ -178,7 +178,17 @@ def generate_root_ca(
     subject_alternative_names: Optional[List[str]] = None,
     directory: Optional[str] = None,
 ) -> Tuple[rsa.RSAPrivateKey, Certificate]:
-    """Create a custom root CA certificate and private key."""
+    """Create a root CA certificate and private key.
+
+    Args:
+        expiration_days (int, optional): the nuber of days before expiration. Defaults to 3650.
+        common_name (str, optional): the common name. Defaults to "Root CA".
+        subject_alternative_names (Optional[List[str]], optional): the subject alternative names. Defaults to None.
+        directory (Optional[str], optional): the directory to save the files. Defaults to None.
+
+    Returns:
+        Tuple[rsa.RSAPrivateKey, Certificate]: returns the CA key and certifcate
+    """
 
     key = rsa.generate_private_key(
         public_exponent=65537, key_size=2048, backend=default_backend()
@@ -227,8 +237,17 @@ def generate_root_ca(
 
 def generate_key_and_csr(
     common_name: str, san_dns_names: List[str], directory: Optional[str] = None
-):
-    """Generate a server private key and a certificate signing request."""
+)->Tuple[rsa.RSAPrivateKey, CertificateSigningRequest]:
+    """Generate a private key and certificate signing request (CSR).
+
+    Args:
+        common_name (str): the common name of the server.
+        san_dns_names (List[str]): the subject alternative names of the server.
+        directory (Optional[str], optional): the directory to save the files. Defaults to None.
+
+    Returns:
+        Certificate: returns the sever private key and certifcate signing request.
+    """
     key = rsa.generate_private_key(
         public_exponent=65537, key_size=2048, backend=default_backend()
     )
@@ -268,17 +287,56 @@ def generate_key_and_csr(
 
 def sign_certificate(
     csr: CertificateSigningRequest,
-    issuer_key: rsa.RSAPrivateKey,
-    issuer_cert: Certificate,
+    issuer_key: Optional[rsa.RSAPrivateKey],
+    issuer_key_path: Optional[str],
+    issuer_cert: Optional[Certificate],
+    issuer_cert_path: Optional[str],
     validity_days=365,
     directory: Optional[str] = None,
-):
-    """Sign a certificate with the root CA."""
+) -> Certificate:
+    """Sign the certifcate signing request
+
+    Args:
+        csr (CertificateSigningRequest): the certificate signing request.
+        issuer_key (Optional[rsa.RSAPrivateKey]): the issuer private key.
+        issuer_key_path (Optional[str]): the issuer private key path.
+        issuer_cert (Optional[Certificate]): the issuer certificate.
+        issuer_cert_path (Optional[str]): the issuer certificate path.
+        validity_days (int, optional): the number of days before expiration. Defaults to 365.
+        directory (Optional[str], optional): the directory to save the files. Defaults to None.
+
+    Raises:
+        ValueError: raise if both issuer_key and issuer_key_path are provided or both ot provided.
+        ValueError: raise if both issuer_cert and issuer_cert_path are provided or both ot provided.
+
+    Returns:
+        Certificate: returns the signed certificate.
+    """
+
+    if issuer_key and issuer_key_path is None:
+        _issuer_key = issuer_key
+    elif issuer_key_path and issuer_key is None:
+        with open(issuer_key_path, "rb") as key_file:
+            _issuer_key = serialization.load_pem_private_key(
+                key_file.read(), password=None, backend=default_backend()
+            )
+    else:
+        raise ValueError("Either issuer_key or issuer_key_path must be provided.")
+
+    if issuer_cert and issuer_cert_path is None:
+        _issuer_cert = issuer_cert
+    elif issuer_cert_path and issuer_cert is None:
+        with open(issuer_cert_path, "rb") as cert_file:
+            _issuer_cert = x509.load_pem_x509_certificate(
+                cert_file.read(), default_backend()
+            )
+    else:
+        raise ValueError("Either issuer_cert or issuer_cert_path must be provided.")
 
     cert = (
         x509.CertificateBuilder()
         .subject_name(csr.subject)
-        .issuer_name(issuer_cert.subject)
+        .issuer_name(_issuer_cert.subject)
         .public_key(csr.public_key())
         .serial_number(x509.random_serial_number())
         .not_valid_before(datetime.now(timezone.utc))
@@ -291,7 +349,7 @@ def sign_certificate(
             csr.extensions.get_extension_for_class(x509.SubjectAlternativeName).value,
             critical=False,
         )
-        .sign(issuer_key, hashes.SHA256(), default_backend())
+        .sign(_issuer_key, hashes.SHA256(), default_backend()) # type: ignore
     )
 
     if directory:

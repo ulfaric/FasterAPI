@@ -15,6 +15,7 @@ nav:
       - Create Model: guides/create_model.md
       - Built-in Dependencies: guides/dependencies.md
       - Back Ground Process: guides/background_process.md
+      - Set Up TLS: guides/tls.md
   - About: about.md
 
 theme:
