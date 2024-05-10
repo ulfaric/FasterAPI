@@ -48,14 +48,16 @@ def create_session(token: str, db: Session, client: str):
     username = payload["sub"]
     exp = datetime.fromtimestamp(payload["exp"])
     existing_active_session = (
-        db.query(ActiveSession).filter(ActiveSession.username == username).first()
+        db.query(ActiveSession).filter(
+            ActiveSession.username == username).first()
     )
     if existing_active_session:
         existing_active_session.client = client  # type: ignore
         existing_active_session.exp = exp  # type: ignore
         db.commit()
     else:
-        token_to_activate = ActiveSession(username=username, client=client, exp=exp)
+        token_to_activate = ActiveSession(
+            username=username, client=client, exp=exp)
         db.add(token_to_activate)
         db.commit()
 
@@ -72,7 +74,8 @@ def blacklist_token(token: str, db: Session):
 def register_user(user: UserCreate):
     """Registers a new user."""
     db = next(get_db())
-    extsing_user = db.query(User).filter(User.username == user.username).first()
+    extsing_user = db.query(User).filter(
+        User.username == user.username).first()
     if extsing_user:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
@@ -237,7 +240,7 @@ def generate_root_ca(
 
 def generate_key_and_csr(
     common_name: str, san_dns_names: List[str], directory: Optional[str] = None
-)->Tuple[rsa.RSAPrivateKey, CertificateSigningRequest]:
+) -> Tuple[rsa.RSAPrivateKey, CertificateSigningRequest]:
     """Generate a private key and certificate signing request (CSR).
 
     Args:
@@ -261,6 +264,10 @@ def generate_key_and_csr(
     if san_dns_names:
         extensions = x509.SubjectAlternativeName(
             [x509.DNSName(name) for name in san_dns_names]
+        )
+    else:
+        extensions = x509.SubjectAlternativeName(
+            [x509.DNSName(common_name)]
         )
 
     csr = (
@@ -312,10 +319,10 @@ def sign_certificate(
     Returns:
         Certificate: returns the signed certificate.
     """
-    
+
     class IssuerKeyNotDefined(Exception):
         pass
-    
+
     class IssuerCertNotDefined(Exception):
         pass
 
@@ -327,7 +334,8 @@ def sign_certificate(
                 key_file.read(), password=None, backend=default_backend()
             )
     else:
-        raise IssuerKeyNotDefined("Either issuer_key or issuer_key_path must be provided.")
+        raise IssuerKeyNotDefined(
+            "Either issuer_key or issuer_key_path must be provided.")
 
     if issuer_cert and issuer_cert_path is None:
         _issuer_cert = issuer_cert
@@ -337,7 +345,8 @@ def sign_certificate(
                 cert_file.read(), default_backend()
             )
     else:
-        raise IssuerCertNotDefined("Either issuer_cert or issuer_cert_path must be provided.")
+        raise IssuerCertNotDefined(
+            "Either issuer_cert or issuer_cert_path must be provided.")
 
     cert = (
         x509.CertificateBuilder()
@@ -352,10 +361,11 @@ def sign_certificate(
             critical=True,
         )
         .add_extension(
-            csr.extensions.get_extension_for_class(x509.SubjectAlternativeName).value,
+            csr.extensions.get_extension_for_class(
+                x509.SubjectAlternativeName).value,
             critical=False,
         )
-        .sign(_issuer_key, hashes.SHA256(), default_backend()) # type: ignore
+        .sign(_issuer_key, hashes.SHA256(), default_backend())  # type: ignore
     )
 
     if directory:
