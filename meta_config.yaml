@@ -8,6 +8,7 @@ REDOC_URL: "/redoc"
 TERMS_OF_SERVICE: ""
 CONTACT: ""
 SUMMARY: "This is a summary of my API"
-JAEGER_SVC_NAME: "my-api"
-JAEGER_TRACE: True
-JAEGER_HOST: "192.168.16.3"
+
+TRACE: True
+TRACE_ENDPOINT: "192.168.5.3:4317"
+SVC_NAME: "my-api"

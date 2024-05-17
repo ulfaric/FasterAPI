@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "FasterAPI"
-version = "0.0.36"
+version = "0.0.37"
 description = ""
 authors = ["ulfaric <ryf0510@live.com>"]
 readme = "README.md"
@@ -14,12 +14,12 @@ sqlalchemy = "^2.0.28"
 python-jose = { extras = ["cryptography"], version = "^3.3.0" }
 bcrypt = "4.0.1"
 passlib = { extras = ["bcrypt"], version = "^1.7.4" }
-opentelemetry-sdk = "^1.23.0"
-opentelemetry-api = "^1.23.0"
-opentelemetry-instrumentation = "^0.44b0"
-opentelemetry-instrumentation-fastapi = "^0.44b0"
-opentelemetry-exporter-jaeger = "^1.21.0"
-akatosh = "^3.0.5"
+akatosh = "^3.0.7"
+opentelemetry-sdk = "^1.24.0"
+opentelemetry-api = "^1.24.0"
+opentelemetry-instrumentation = "^0.45b0"
+opentelemetry-instrumentation-fastapi = "^0.45b0"
+opentelemetry-exporter-otlp = "^1.24.0"
 
 
 [build-system]

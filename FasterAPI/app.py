@@ -8,7 +8,7 @@ from typing import List
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -105,18 +105,17 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(user_router)
 
-if meta_config.get("JAEGER_TRACE", False):
-    jaeger_exporter = JaegerExporter(
-        # configure the hostname and port of your Jaeger instance here
-        agent_host_name=meta_config.get("JAEGER_HOST", "localhost"),
-        agent_port=meta_config.get("JAEGER_PORT", 6831),
+if meta_config.get("TRACE", False):
+    exporter = OTLPSpanExporter(
+        endpoint=meta_config.get("TRACE_ENDPOINT", "localhost:4317"),
+        insecure=True,
     )
 
     trace_provider = TracerProvider(
         resource=Resource(
-            attributes={"service.name": meta_config.get("JAEGER_SVC_NAME", "FasterAPI")}
+            attributes={"service.name": meta_config.get("SVC_NAME", "FasterAPI")}
         )
     )
-    trace_provider.add_span_processor(SimpleSpanProcessor(jaeger_exporter))
+    trace_provider.add_span_processor(SimpleSpanProcessor(exporter))
     trace.set_tracer_provider(tracer_provider=trace_provider)
     FastAPIInstrumentor().instrument_app(app)
