@@ -14,7 +14,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 
-from . import Engine, config, get_db, logger, meta_config
+from .essentials import Engine, config, get_db, logger, meta_config
 from .models import Base, User
 from .router import user_router, auth_router
 from .utils import _clean_up_expired_tokens, register_user

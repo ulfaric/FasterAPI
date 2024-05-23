@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 from sqlalchemy.orm import Session
 
-from . import ALLOW_SELF_REGISTRATION, TOKEN_URL, get_db, oauth2_scheme, pwd_context
+from .essentials import ALLOW_SELF_REGISTRATION, TOKEN_URL, get_db, oauth2_scheme, pwd_context
 from .dependencies import authenticated, is_superuser
 from .models import User, UserPrivilege
 from .schemas import UserCreate, UserRead, UserUpdate

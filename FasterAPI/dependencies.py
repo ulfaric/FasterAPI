@@ -6,7 +6,7 @@ from fastapi.security import SecurityScopes
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from . import ALGORITHM, ALLOW_MULTI_SESSIONS, SECRET_KEY, get_db, oauth2_scheme
+from .essentials import ALGORITHM, ALLOW_MULTI_SESSIONS, SECRET_KEY, get_db, oauth2_scheme
 from .models import ActiveSession, BlacklistedToken, User
 
 
