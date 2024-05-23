@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from . import ALLOW_SELF_REGISTRATION, TOKEN_URL, get_db, oauth2_scheme, pwd_context
 from .dependencies import authenticated, is_superuser
 from .models import User, UserPrivilege
-from .schemas import UserCreate, UserInfo, UserUpdate
+from .schemas import UserCreate, UserRead, UserUpdate
 from .utils import (
     authenticate_user,
     blacklist_token,
@@ -70,7 +70,7 @@ else:
         return {"detail": "user successfully registered"}
 
 
-@user_router.get("/users/me", response_model=UserInfo)
+@user_router.get("/users/me", response_model=UserRead)
 async def get_user(user: User = Depends(authenticated), db: Session = Depends(get_db)):
     """Return the current user"""
     return user
@@ -78,7 +78,7 @@ async def get_user(user: User = Depends(authenticated), db: Session = Depends(ge
 
 if ALLOW_SELF_REGISTRATION:
 
-    @user_router.patch("/users/update/{username}", response_model=UserInfo)
+    @user_router.patch("/users/update/{username}", response_model=UserRead)
     async def update_user(
         username: str,
         new_userinfo: UserUpdate,
@@ -86,7 +86,8 @@ if ALLOW_SELF_REGISTRATION:
         user: User = Depends(authenticated),
     ):
         """Update a user's information"""
-        existing_user = db.query(User).filter(User.username == username).first()
+        existing_user = db.query(User).filter(
+            User.username == username).first()
         if not existing_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -96,13 +97,14 @@ if ALLOW_SELF_REGISTRATION:
         existing_user.last_name = new_userinfo.last_name  # type: ignore
         existing_user.email = new_userinfo.email  # type: ignore
         if new_userinfo.password != "":
-            existing_user.hashed_password = pwd_context.hash(new_userinfo.password)  # type: ignore
+            existing_user.hashed_password = pwd_context.hash(
+                new_userinfo.password)  # type: ignore
         db.commit()
         return existing_user
 
 else:
 
-    @user_router.patch("/users/update/{username}", response_model=UserInfo)
+    @user_router.patch("/users/update/{username}", response_model=UserRead)
     async def update_user(
         username: str,
         new_userinfo: UserUpdate,
@@ -110,7 +112,8 @@ else:
         user: User = Depends(is_superuser),
     ):
         """Update a user's information"""
-        existing_user = db.query(User).filter(User.username == username).first()
+        existing_user = db.query(User).filter(
+            User.username == username).first()
         if not existing_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -120,12 +123,13 @@ else:
         existing_user.last_name = new_userinfo.last_name  # type: ignore
         existing_user.email = new_userinfo.email  # type: ignore
         if new_userinfo.password != "":
-            existing_user.hashed_password = pwd_context.hash(new_userinfo.password)  # type: ignore
+            existing_user.hashed_password = pwd_context.hash(
+                new_userinfo.password)  # type: ignore
         db.commit()
         return existing_user
 
 
-@user_router.post("/users/promote/{username}", response_model=UserInfo)
+@user_router.post("/users/promote/{username}", response_model=UserRead)
 async def promote_user(
     username: str, db: Session = Depends(get_db), user: User = Depends(is_superuser)
 ):
@@ -141,7 +145,7 @@ async def promote_user(
     return existing_user
 
 
-@user_router.delete("/users/demote/{username}", response_model=UserInfo)
+@user_router.delete("/users/demote/{username}", response_model=UserRead)
 async def demote_user(
     username: str, db: Session = Depends(get_db), user: User = Depends(is_superuser)
 ):
@@ -157,7 +161,7 @@ async def demote_user(
     return existing_user
 
 
-@user_router.post("/users/privilege/add", response_model=UserInfo)
+@user_router.post("/users/privilege/add", response_model=UserRead)
 async def add_privilege(
     username: str,
     privilege: str,
@@ -171,13 +175,14 @@ async def add_privilege(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    new_privilege = UserPrivilege(user_id=existing_user.id, privilege=privilege)
+    new_privilege = UserPrivilege(
+        user_id=existing_user.id, privilege=privilege)
     db.add(new_privilege)
     db.commit()
     return existing_user
 
 
-@user_router.post("/users/privilege/remove", response_model=UserInfo)
+@user_router.post("/users/privilege/remove", response_model=UserRead)
 async def remove_privilege(
     username: str,
     privilege: str,
@@ -207,7 +212,7 @@ async def remove_privilege(
     return existing_user
 
 
-@user_router.delete("/users/delete/{username}", response_model=UserInfo)
+@user_router.delete("/users/delete/{username}", response_model=UserRead)
 async def delete_user(
     username: str, db: Session = Depends(get_db), user: User = Depends(is_superuser)
 ):
@@ -223,7 +228,7 @@ async def delete_user(
     return existing_user
 
 
-@user_router.get("/users/all", response_model=list[UserInfo])
+@user_router.get("/users/all", response_model=list[UserRead])
 async def get_all_users(
     db: Session = Depends(get_db), user: User = Depends(is_superuser)
 ):

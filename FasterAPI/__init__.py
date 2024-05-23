@@ -74,7 +74,7 @@ if config is None:
 
 # set up database
 SQLALCHEMY_DATABASE_URL = os.getenv(
-    "SQLALCHEMY_DATABASE_URL", config.get("SQLALCHEMY_DATABASE_URL")
+    "SQLALCHEMY_DATABASE_URL", config.get("SQLALCHEMY_DATABASE_URL", "sqlite:///dev.db")
 )
 
 if SQLALCHEMY_DATABASE_URL is None:

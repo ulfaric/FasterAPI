@@ -9,8 +9,8 @@ class Privilege(BaseModel):
     privilege: str
 
 
-class UserInfo(BaseModel):
-    """Schemas for User information."""
+class UserRead(BaseModel):
+    """Schemas for read User information."""
 
     username: str
     first_name: str
@@ -21,7 +21,7 @@ class UserInfo(BaseModel):
 
 
 class UserCreate(BaseModel):
-    """Schemas for User registration under superuser."""
+    """Schemas for create new user."""
 
     username: str
     first_name: str
@@ -32,12 +32,17 @@ class UserCreate(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    """Schemas for User information for administration."""
+    """Schemas for update user information."""
 
     first_name: str
     last_name: str
     email: EmailStr
     password: str
+
+class UserDelete(BaseModel):
+    """Schemas for delete user."""
+
+    username: str
 
 
 class BearToken(BaseModel):
