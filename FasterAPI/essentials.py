@@ -13,7 +13,11 @@ from . import logger
 
 
 config = yaml.safe_load(open("auth_config.yaml", "r"))
+if config is None:
+    config = {}
 meta_config = yaml.safe_load(open("meta_config.yaml", "r"))
+if meta_config is None:
+    meta_config = {}
 
 if config is None:
     logger.warning(
