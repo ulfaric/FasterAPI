@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import secrets
+from typing import Dict
 
 import yaml
 from fastapi.security import OAuth2PasswordBearer
@@ -11,26 +12,26 @@ from sqlalchemy.orm import sessionmaker
 
 from . import logger
 
-
-config = yaml.safe_load(open("auth_config.yaml", "r"))
-if config is None:
+try:
+    config: Dict = yaml.safe_load(open("auth_config.yaml", "r"))
+    logger.warning(
+        "Configuration file auth_config.yaml not found. Default values will be used."
+    )
+except FileNotFoundError:
     config = {}
-meta_config = yaml.safe_load(open("meta_config.yaml", "r"))
-if meta_config is None:
+
+try:
+    meta_config: Dict = yaml.safe_load(open("meta_config.yaml", "r"))
+    logger.warning(
+        "Configuration file meta_config.yaml not found. Default values will be used."
+    )
+except FileNotFoundError:
     meta_config = {}
 
-if config is None:
-    logger.warning(
-        "Configuration file auth_config.yaml not found. Default values will be used.")
-
-if meta_config is None:
-    logger.warning(
-        "Configuration file meta_config.yaml not found. Default values will be used.")
 
 # set up database
 SQLALCHEMY_DATABASE_URL = os.getenv(
-    "SQLALCHEMY_DATABASE_URL", config.get(
-        "SQLALCHEMY_DATABASE_URL", "sqlite:///dev.db")
+    "SQLALCHEMY_DATABASE_URL", config.get("SQLALCHEMY_DATABASE_URL", "sqlite:///dev.db")
 )
 
 if SQLALCHEMY_DATABASE_URL is None:
@@ -50,8 +51,7 @@ def get_db():
         db.close()
 
 
-SECRET_KEY = os.getenv("SECRET_KEY", config.get(
-    "SECRET_KEY", secrets.token_hex(32)))
+SECRET_KEY = os.getenv("SECRET_KEY", config.get("SECRET_KEY", secrets.token_hex(32)))
 ALGORITHM = os.getenv("ALGORITHM", config.get("ALGORITHM", "HS256"))
 TOKEN_URL = os.getenv("TOKEN_URL", config.get("TOKEN_URL", "login"))
 TOKEN_EXPIRATION_TIME = int(
