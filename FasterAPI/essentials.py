@@ -13,7 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from . import logger
 
 try:
-    config: Dict = yaml.safe_load(open("auth_config.yaml", "r"))
+    config: Dict = yaml.safe_load(open("./auth_config.yaml", "r"))
     logger.warning(
         "Configuration file auth_config.yaml not found. Default values will be used."
     )
@@ -21,7 +21,7 @@ except FileNotFoundError:
     config = {}
 
 try:
-    meta_config: Dict = yaml.safe_load(open("meta_config.yaml", "r"))
+    meta_config: Dict = yaml.safe_load(open("./meta_config.yaml", "r"))
     logger.warning(
         "Configuration file meta_config.yaml not found. Default values will be used."
     )
